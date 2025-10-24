@@ -1,0 +1,1144 @@
+substitutions:
+  name: deye-modbus-scanner
+  device_description: "Deye - Modbus - Scanner (U+S)"
+  modbus_controller_id: deye
+  device_type: deye-modbus-scanner
+
+##############################################################
+esphome:
+  name: ${name}
+  friendly_name: ${name}
+
+##############################################################
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+    version: recommended
+
+##############################################################
+logger:
+  level: DEBUG
+
+##############################################################
+api:
+  encryption:
+    key: "API_KEY_HERE"  # MODIFICĂ AICI - generează cu: esphome config.yaml
+  reboot_timeout: 0s
+
+##############################################################
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  use_address: 0.0.0.0  # MODIFICĂ AICI - IP-ul dispozitivului
+  power_save_mode: none
+  fast_connect: on
+  manual_ip:
+    static_ip: 0.0.0.0  # MODIFICĂ AICI - IP static (ex: 192.168.1.100)
+    gateway: 0.0.0.0    # MODIFICĂ AICI - Gateway (ex: 192.168.1.1)
+    subnet: 255.255.255.0
+    dns1: 1.1.1.1
+
+##############################################################
+web_server:
+  local: true
+  port: 80
+  version: 2
+
+##############################################################
+ota:
+  platform: esphome
+  password: !secret ota_password
+
+##############################################################
+uart:
+  id: mod_bus
+  tx_pin: GPIO17
+  rx_pin: GPIO16
+  baud_rate: 9600
+  stop_bits: 1
+
+##############################################################
+modbus:
+  id: modbus1
+  uart_id: mod_bus
+
+##############################################################
+modbus_controller:
+  - id: ${modbus_controller_id}
+    address: 0x1
+    modbus_id: modbus1
+    setup_priority: -10
+    update_interval: 30s
+
+##############################################################
+# SCANNER COMPLET - Fiecare registru scanat cu U_WORD și S_WORD
+##############################################################
+sensor:
+  # ============================================
+  # ZONA 0-50: System Info & Status
+  # ============================================
+  
+  # REG_0 - Running Status
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_0_Running_Status_U"
+    address: 0
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_0_Running_Status_S"
+    address: 0
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_13 - Year
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_13_Year_U"
+    address: 13
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_13_Year_S"
+    address: 13
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_14 - Month
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_14_Month_U"
+    address: 14
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_14_Month_S"
+    address: 14
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_15 - Day
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_15_Day_U"
+    address: 15
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_15_Day_S"
+    address: 15
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_16 - Hour
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_16_Hour_U"
+    address: 16
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_16_Hour_S"
+    address: 16
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_17 - Minute
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_17_Minute_U"
+    address: 17
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_17_Minute_S"
+    address: 17
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_18 - Second
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_18_Second_U"
+    address: 18
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_18_Second_S"
+    address: 18
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_20 - Lock
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_20_Lock_U"
+    address: 20
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_20_Lock_S"
+    address: 20
+    register_type: holding
+    value_type: S_WORD
+
+  # ============================================
+  # ZONA 60-150: Settings & Control
+  # ============================================
+  
+  # REG_60 - Password
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_60_Password_U"
+    address: 60
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_60_Password_S"
+    address: 60
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_80 - Grid Freq Limit High
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_80_Grid_Freq_High_U"
+    address: 80
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_80_Grid_Freq_High_S"
+    address: 80
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.01
+    
+  # REG_81 - Grid Freq Limit Low
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_81_Grid_Freq_Low_U"
+    address: 81
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_81_Grid_Freq_Low_S"
+    address: 81
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.01
+    
+  # REG_100 - Battery Type
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_100_Battery_Type_U"
+    address: 100
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_100_Battery_Type_S"
+    address: 100
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_101 - Battery Protocol
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_101_Battery_Protocol_U"
+    address: 101
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_101_Battery_Protocol_S"
+    address: 101
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_102 - Battery Capacity
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_102_Battery_Capacity_U"
+    address: 102
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_102_Battery_Capacity_S"
+    address: 102
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_103 - Battery Float Voltage
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_103_Float_Voltage_U"
+    address: 103
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_103_Float_Voltage_S"
+    address: 103
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.01
+    
+  # REG_104 - Battery Absorption Voltage
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_104_Absorption_Voltage_U"
+    address: 104
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_104_Absorption_Voltage_S"
+    address: 104
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.01
+    
+  # REG_108 - Max Charge Current
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_108_Max_Charge_Current_U"
+    address: 108
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_108_Max_Charge_Current_S"
+    address: 108
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_109 - Max Discharge Current
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_109_Max_Discharge_Current_U"
+    address: 109
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_109_Max_Discharge_Current_S"
+    address: 109
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_115 - Battery Shutdown Voltage
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_115_Shutdown_Voltage_U"
+    address: 115
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_115_Shutdown_Voltage_S"
+    address: 115
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.01
+    
+  # REG_116 - Battery Restart Voltage
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_116_Restart_Voltage_U"
+    address: 116
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_116_Restart_Voltage_S"
+    address: 116
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.01
+    
+  # REG_117 - Battery Low Voltage
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_117_Low_Voltage_U"
+    address: 117
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_117_Low_Voltage_S"
+    address: 117
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.01
+    
+  # REG_118 - Battery Empty Voltage
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_118_Empty_Voltage_U"
+    address: 118
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_118_Empty_Voltage_S"
+    address: 118
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.01
+    
+  # REG_142 - Work Mode
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_142_Work_Mode_U"
+    address: 142
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_142_Work_Mode_S"
+    address: 142
+    register_type: holding
+    value_type: S_WORD
+
+  # ============================================
+  # ZONA 150-200: PV Data
+  # ============================================
+  
+  # REG_150 - PV1 Voltage
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_150_PV1_Voltage_U"
+    address: 150
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.1
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_150_PV1_Voltage_S"
+    address: 150
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.1
+    
+  # REG_151 - PV1 Current
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_151_PV1_Current_U"
+    address: 151
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.1
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_151_PV1_Current_S"
+    address: 151
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.1
+    
+  # REG_154 - PV2 Voltage
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_154_PV2_Voltage_U"
+    address: 154
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.1
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_154_PV2_Voltage_S"
+    address: 154
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.1
+    
+  # REG_155 - PV2 Current
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_155_PV2_Current_U"
+    address: 155
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.1
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_155_PV2_Current_S"
+    address: 155
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.1
+    
+  # REG_186 - PV1 Power
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_186_PV1_Power_U"
+    address: 186
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_186_PV1_Power_S"
+    address: 186
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_187 - PV2 Power
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_187_PV2_Power_U"
+    address: 187
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_187_PV2_Power_S"
+    address: 187
+    register_type: holding
+    value_type: S_WORD
+
+  # ============================================
+  # ZONA 210-250: Battery Data
+  # ============================================
+  
+  # REG_210 - Battery Voltage
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_210_Battery_Voltage_U"
+    address: 210
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_210_Battery_Voltage_S"
+    address: 210
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.01
+    
+  # REG_211 - Battery Current
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_211_Battery_Current_U"
+    address: 211
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_211_Battery_Current_S"
+    address: 211
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.01
+    
+  # REG_212 - Battery Power
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_212_Battery_Power_U"
+    address: 212
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_212_Battery_Power_S"
+    address: 212
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_214 - Battery SOC
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_214_Battery_SOC_U"
+    address: 214
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_214_Battery_SOC_S"
+    address: 214
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_216 - Battery Temperature
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_216_Battery_Temp_U"
+    address: 216
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.1
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_216_Battery_Temp_S"
+    address: 216
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.1
+    
+  # REG_230 - Max Charge Power
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_230_Max_Charge_Power_U"
+    address: 230
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_230_Max_Charge_Power_S"
+    address: 230
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_231 - Max Discharge Power
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_231_Max_Discharge_Power_U"
+    address: 231
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_231_Max_Discharge_Power_S"
+    address: 231
+    register_type: holding
+    value_type: S_WORD
+
+  # ============================================
+  # ZONA 340-380: Power Control
+  # ============================================
+  
+  # REG_340 - Max Sell Power
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_340_Max_Sell_Power_U"
+    address: 340
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_340_Max_Sell_Power_S"
+    address: 340
+    register_type: holding
+    value_type: S_WORD
+
+  # ============================================
+  # ZONA 500-600: AC Grid Data
+  # ============================================
+  
+  # REG_500 - Grid Phase A Voltage
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_500_Grid_Phase_A_Voltage_U"
+    address: 500
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.1
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_500_Grid_Phase_A_Voltage_S"
+    address: 500
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.1
+    
+  # REG_501 - Grid Phase B Voltage
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_501_Grid_Phase_B_Voltage_U"
+    address: 501
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.1
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_501_Grid_Phase_B_Voltage_S"
+    address: 501
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.1
+    
+  # REG_502 - Grid Phase C Voltage
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_502_Grid_Phase_C_Voltage_U"
+    address: 502
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.1
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_502_Grid_Phase_C_Voltage_S"
+    address: 502
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.1
+    
+  # REG_504 - Internal CT L1 Power
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_504_CT_L1_Power_U"
+    address: 504
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_504_CT_L1_Power_S"
+    address: 504
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_505 - Internal CT L2 Power
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_505_CT_L2_Power_U"
+    address: 505
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_505_CT_L2_Power_S"
+    address: 505
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_506 - Internal CT L3 Power
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_506_CT_L3_Power_U"
+    address: 506
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_506_CT_L3_Power_S"
+    address: 506
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_507 - External CT L1 Power
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_507_EXT_CT_L1_Power_U"
+    address: 507
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_507_EXT_CT_L1_Power_S"
+    address: 507
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_508 - External CT L2 Power
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_508_EXT_CT_L2_Power_U"
+    address: 508
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_508_EXT_CT_L2_Power_S"
+    address: 508
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_509 - External CT L3 Power
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_509_EXT_CT_L3_Power_U"
+    address: 509
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_509_EXT_CT_L3_Power_S"
+    address: 509
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_514 - Grid Frequency
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_514_Grid_Frequency_U"
+    address: 514
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_514_Grid_Frequency_S"
+    address: 514
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.01
+    
+  # REG_515 - Grid Phase A Current
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_515_Grid_Phase_A_Current_U"
+    address: 515
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_515_Grid_Phase_A_Current_S"
+    address: 515
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.01
+    
+  # REG_516 - Grid Phase B Current
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_516_Grid_Phase_B_Current_U"
+    address: 516
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_516_Grid_Phase_B_Current_S"
+    address: 516
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.01
+    
+  # REG_517 - Grid Phase C Current
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_517_Grid_Phase_C_Current_U"
+    address: 517
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_517_Grid_Phase_C_Current_S"
+    address: 517
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.01
+    
+  # REG_522 - Load Phase A Power
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_522_Load_Phase_A_Power_U"
+    address: 522
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_522_Load_Phase_A_Power_S"
+    address: 522
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_523 - Load Phase B Power
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_523_Load_Phase_B_Power_U"
+    address: 523
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_523_Load_Phase_B_Power_S"
+    address: 523
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_524 - Load Phase C Power
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_524_Load_Phase_C_Power_U"
+    address: 524
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_524_Load_Phase_C_Power_S"
+    address: 524
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_525 - Total Load Power
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_525_Total_Load_Power_U"
+    address: 525
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_525_Total_Load_Power_S"
+    address: 525
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_529 - Total Grid Power
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_529_Total_Grid_Power_U"
+    address: 529
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_529_Total_Grid_Power_S"
+    address: 529
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_534 - Inverter Temperature
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_534_Inverter_Temp_U"
+    address: 534
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.1
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_534_Inverter_Temp_S"
+    address: 534
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.1
+    
+  # REG_540 - Daily Production
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_540_Daily_Production_U"
+    address: 540
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.1
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_540_Daily_Production_S"
+    address: 540
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.1
+    
+  # REG_542 - Total Production Low
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_542_Total_Production_Low_U"
+    address: 542
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_542_Total_Production_Low_S"
+    address: 542
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_543 - Total Production High
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_543_Total_Production_High_U"
+    address: 543
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_543_Total_Production_High_S"
+    address: 543
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_555 - Daily Battery Charge
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_555_Daily_Battery_Charge_U"
+    address: 555
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.1
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_555_Daily_Battery_Charge_S"
+    address: 555
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.1
+    
+  # REG_556 - Daily Battery Discharge
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_556_Daily_Battery_Discharge_U"
+    address: 556
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.1
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_556_Daily_Battery_Discharge_S"
+    address: 556
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.1
+    
+  # REG_565 - Daily Grid Export
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_565_Daily_Grid_Export_U"
+    address: 565
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.1
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_565_Daily_Grid_Export_S"
+    address: 565
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.1
+    
+  # REG_566 - Daily Grid Import
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_566_Daily_Grid_Import_U"
+    address: 566
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.1
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_566_Daily_Grid_Import_S"
+    address: 566
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.1
+    
+  # REG_587 - Battery Voltage BMS
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_587_Battery_Voltage_BMS_U"
+    address: 587
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_587_Battery_Voltage_BMS_S"
+    address: 587
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.01
+    
+  # REG_588 - Battery Capacity BMS
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_588_Battery_Capacity_BMS_U"
+    address: 588
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_588_Battery_Capacity_BMS_S"
+    address: 588
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_590 - Battery Temperature BMS
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_590_Battery_Temp_BMS_U"
+    address: 590
+    register_type: holding
+    value_type: U_WORD
+    filters:
+      - multiply: 0.1
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_590_Battery_Temp_BMS_S"
+    address: 590
+    register_type: holding
+    value_type: S_WORD
+    filters:
+      - multiply: 0.1
