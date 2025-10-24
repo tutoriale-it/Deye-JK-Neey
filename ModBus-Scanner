@@ -1,8 +1,9 @@
 substitutions:
-  name: deye-modbus-scanner
-  device_description: "Deye - Modbus - Scanner (U+S)"
-  modbus_controller_id: deye
-  device_type: deye-modbus-scanner
+  name: invertor_deye
+  device_description: "ESPHome - Deye - Config"
+  modbus_controller_id: deye_8k
+  device_type: deye
+  inverter_model: "SUN-8K-SG05LP1-EU"
 
 ##############################################################
 esphome:
@@ -13,29 +14,28 @@ esphome:
 esp32:
   board: esp32dev
   framework:
-    type: arduino
-    version: recommended
+    type: esp-idf
 
 ##############################################################
 logger:
-  level: DEBUG
+  level: WARN
 
 ##############################################################
 api:
   encryption:
-    key: "API_KEY_HERE"  # MODIFICĂ AICI - generează cu: esphome config.yaml
+    key: "6/PC0DgEywdt9rFPgenfyiPfMdW4BUF0rwRAT3rjMjY="
   reboot_timeout: 0s
 
 ##############################################################
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
-  use_address: 0.0.0.0  # MODIFICĂ AICI - IP-ul dispozitivului
+  use_address: 10.10.9.230
   power_save_mode: none
   fast_connect: on
   manual_ip:
-    static_ip: 0.0.0.0  # MODIFICĂ AICI - IP static (ex: 192.168.1.100)
-    gateway: 0.0.0.0    # MODIFICĂ AICI - Gateway (ex: 192.168.1.1)
+    static_ip: 10.10.9.230
+    gateway: 10.10.9.254
     subnet: 255.255.255.0
     dns1: 1.1.1.1
 
@@ -44,6 +44,10 @@ web_server:
   local: true
   port: 80
   version: 2
+  include_internal: false
+  auth:
+    username: !secret web_server_username
+    password: !secret web_server_password
 
 ##############################################################
 ota:
@@ -72,7 +76,7 @@ modbus_controller:
     update_interval: 30s
 
 ##############################################################
-# SCANNER COMPLET - Fiecare registru scanat cu U_WORD și S_WORD
+# SCANNER COMPLET - TOATE registrele cu U_WORD și S_WORD
 ##############################################################
 sensor:
   # ============================================
@@ -90,6 +94,152 @@ sensor:
     modbus_controller_id: ${modbus_controller_id}
     name: "REG_0_Running_Status_S"
     address: 0
+    register_type: holding
+    value_type: S_WORD
+    
+  # REG_1-12 - Registri lipsa
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_1_U"
+    address: 1
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_1_S"
+    address: 1
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_2_U"
+    address: 2
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_2_S"
+    address: 2
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_3_U"
+    address: 3
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_3_S"
+    address: 3
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_4_U"
+    address: 4
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_4_S"
+    address: 4
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_5_U"
+    address: 5
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_5_S"
+    address: 5
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_6_U"
+    address: 6
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_6_S"
+    address: 6
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_7_U"
+    address: 7
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_7_S"
+    address: 7
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_8_U"
+    address: 8
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_8_S"
+    address: 8
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_9_U"
+    address: 9
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_9_S"
+    address: 9
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_10_U"
+    address: 10
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_10_S"
+    address: 10
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_11_U"
+    address: 11
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_11_S"
+    address: 11
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_12_U"
+    address: 12
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_12_S"
+    address: 12
     register_type: holding
     value_type: S_WORD
     
@@ -176,6 +326,20 @@ sensor:
     address: 18
     register_type: holding
     value_type: S_WORD
+  
+  # REG_19 - Lipsa
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_19_U"
+    address: 19
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_19_S"
+    address: 19
+    register_type: holding
+    value_type: S_WORD
     
   # REG_20 - Lock
   - platform: modbus_controller
@@ -188,6 +352,476 @@ sensor:
     modbus_controller_id: ${modbus_controller_id}
     name: "REG_20_Lock_S"
     address: 20
+    register_type: holding
+    value_type: S_WORD
+
+  # REG_21-59 - Registri lipsa
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_21_U"
+    address: 21
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_21_S"
+    address: 21
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_22_U"
+    address: 22
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_22_S"
+    address: 22
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_23_U"
+    address: 23
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_23_S"
+    address: 23
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_24_U"
+    address: 24
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_24_S"
+    address: 24
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_25_U"
+    address: 25
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_25_S"
+    address: 25
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_26_U"
+    address: 26
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_26_S"
+    address: 26
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_27_U"
+    address: 27
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_27_S"
+    address: 27
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_28_U"
+    address: 28
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_28_S"
+    address: 28
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_29_U"
+    address: 29
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_29_S"
+    address: 29
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_30_U"
+    address: 30
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_30_S"
+    address: 30
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_31_U"
+    address: 31
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_31_S"
+    address: 31
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_32_U"
+    address: 32
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_32_S"
+    address: 32
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_33_U"
+    address: 33
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_33_S"
+    address: 33
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_34_U"
+    address: 34
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_34_S"
+    address: 34
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_35_U"
+    address: 35
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_35_S"
+    address: 35
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_36_U"
+    address: 36
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_36_S"
+    address: 36
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_37_U"
+    address: 37
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_37_S"
+    address: 37
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_38_U"
+    address: 38
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_38_S"
+    address: 38
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_39_U"
+    address: 39
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_39_S"
+    address: 39
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_40_U"
+    address: 40
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_40_S"
+    address: 40
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_41_U"
+    address: 41
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_41_S"
+    address: 41
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_42_U"
+    address: 42
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_42_S"
+    address: 42
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_43_U"
+    address: 43
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_43_S"
+    address: 43
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_44_U"
+    address: 44
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_44_S"
+    address: 44
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_45_U"
+    address: 45
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_45_S"
+    address: 45
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_46_U"
+    address: 46
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_46_S"
+    address: 46
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_47_U"
+    address: 47
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_47_S"
+    address: 47
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_48_U"
+    address: 48
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_48_S"
+    address: 48
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_49_U"
+    address: 49
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_49_S"
+    address: 49
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_50_U"
+    address: 50
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_50_S"
+    address: 50
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_51_U"
+    address: 51
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_51_S"
+    address: 51
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_52_U"
+    address: 52
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_52_S"
+    address: 52
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_53_U"
+    address: 53
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_53_S"
+    address: 53
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_54_U"
+    address: 54
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_54_S"
+    address: 54
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_55_U"
+    address: 55
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_55_S"
+    address: 55
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_56_U"
+    address: 56
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_56_S"
+    address: 56
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_57_U"
+    address: 57
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_57_S"
+    address: 57
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_58_U"
+    address: 58
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_58_S"
+    address: 58
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_59_U"
+    address: 59
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_59_S"
+    address: 59
     register_type: holding
     value_type: S_WORD
 
@@ -206,6 +840,236 @@ sensor:
     modbus_controller_id: ${modbus_controller_id}
     name: "REG_60_Password_S"
     address: 60
+    register_type: holding
+    value_type: S_WORD
+
+  # REG_61-79 - Registri lipsa
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_61_U"
+    address: 61
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_61_S"
+    address: 61
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_62_U"
+    address: 62
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_62_S"
+    address: 62
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_63_U"
+    address: 63
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_63_S"
+    address: 63
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_64_U"
+    address: 64
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_64_S"
+    address: 64
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_65_U"
+    address: 65
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_65_S"
+    address: 65
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_66_U"
+    address: 66
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_66_S"
+    address: 66
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_67_U"
+    address: 67
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_67_S"
+    address: 67
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_68_U"
+    address: 68
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_68_S"
+    address: 68
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_69_U"
+    address: 69
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_69_S"
+    address: 69
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_70_U"
+    address: 70
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_70_S"
+    address: 70
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_71_U"
+    address: 71
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_71_S"
+    address: 71
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_72_U"
+    address: 72
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_72_S"
+    address: 72
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_73_U"
+    address: 73
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_73_S"
+    address: 73
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_74_U"
+    address: 74
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_74_S"
+    address: 74
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_75_U"
+    address: 75
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_75_S"
+    address: 75
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_76_U"
+    address: 76
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_76_S"
+    address: 76
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_77_U"
+    address: 77
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_77_S"
+    address: 77
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_78_U"
+    address: 78
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_78_S"
+    address: 78
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_79_U"
+    address: 79
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_79_S"
+    address: 79
     register_type: holding
     value_type: S_WORD
     
@@ -244,6 +1108,224 @@ sensor:
     value_type: S_WORD
     filters:
       - multiply: 0.01
+
+  # REG_82-99 - Registri lipsa
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_82_U"
+    address: 82
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_82_S"
+    address: 82
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_83_U"
+    address: 83
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_83_S"
+    address: 83
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_84_U"
+    address: 84
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_84_S"
+    address: 84
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_85_U"
+    address: 85
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_85_S"
+    address: 85
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_86_U"
+    address: 86
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_86_S"
+    address: 86
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_87_U"
+    address: 87
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_87_S"
+    address: 87
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_88_U"
+    address: 88
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_88_S"
+    address: 88
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_89_U"
+    address: 89
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_89_S"
+    address: 89
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_90_U"
+    address: 90
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_90_S"
+    address: 90
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_91_U"
+    address: 91
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_91_S"
+    address: 91
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_92_U"
+    address: 92
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_92_S"
+    address: 92
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_93_U"
+    address: 93
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_93_S"
+    address: 93
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_94_U"
+    address: 94
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_94_S"
+    address: 94
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_95_U"
+    address: 95
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_95_S"
+    address: 95
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_96_U"
+    address: 96
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_96_S"
+    address: 96
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_97_U"
+    address: 97
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_97_S"
+    address: 97
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_98_U"
+    address: 98
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_98_S"
+    address: 98
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_99_U"
+    address: 99
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_99_S"
+    address: 99
+    register_type: holding
+    value_type: S_WORD
     
   # REG_100 - Battery Type
   - platform: modbus_controller
@@ -322,6 +1404,44 @@ sensor:
     value_type: S_WORD
     filters:
       - multiply: 0.01
+
+  # REG_105-107 - Registri lipsa
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_105_U"
+    address: 105
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_105_S"
+    address: 105
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_106_U"
+    address: 106
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_106_S"
+    address: 106
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_107_U"
+    address: 107
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_107_S"
+    address: 107
+    register_type: holding
+    value_type: S_WORD
     
   # REG_108 - Max Charge Current
   - platform: modbus_controller
@@ -348,6 +1468,68 @@ sensor:
     modbus_controller_id: ${modbus_controller_id}
     name: "REG_109_Max_Discharge_Current_S"
     address: 109
+    register_type: holding
+    value_type: S_WORD
+
+  # REG_110-114 - Registri lipsa
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_110_U"
+    address: 110
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_110_S"
+    address: 110
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_111_U"
+    address: 111
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_111_S"
+    address: 111
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_112_U"
+    address: 112
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_112_S"
+    address: 112
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_113_U"
+    address: 113
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_113_S"
+    address: 113
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_114_U"
+    address: 114
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_114_S"
+    address: 114
     register_type: holding
     value_type: S_WORD
     
@@ -422,6 +1604,284 @@ sensor:
     value_type: S_WORD
     filters:
       - multiply: 0.01
+
+  # REG_119-141 - Registri lipsa
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_119_U"
+    address: 119
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_119_S"
+    address: 119
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_120_U"
+    address: 120
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_120_S"
+    address: 120
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_121_U"
+    address: 121
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_121_S"
+    address: 121
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_122_U"
+    address: 122
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_122_S"
+    address: 122
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_123_U"
+    address: 123
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_123_S"
+    address: 123
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_124_U"
+    address: 124
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_124_S"
+    address: 124
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_125_U"
+    address: 125
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_125_S"
+    address: 125
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_126_U"
+    address: 126
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_126_S"
+    address: 126
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_127_U"
+    address: 127
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_127_S"
+    address: 127
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_128_U"
+    address: 128
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_128_S"
+    address: 128
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_129_U"
+    address: 129
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_129_S"
+    address: 129
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_130_U"
+    address: 130
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_130_S"
+    address: 130
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_131_U"
+    address: 131
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_131_S"
+    address: 131
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_132_U"
+    address: 132
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_132_S"
+    address: 132
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_133_U"
+    address: 133
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_133_S"
+    address: 133
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_134_U"
+    address: 134
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_134_S"
+    address: 134
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_135_U"
+    address: 135
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_135_S"
+    address: 135
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_136_U"
+    address: 136
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_136_S"
+    address: 136
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_137_U"
+    address: 137
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_137_S"
+    address: 137
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_138_U"
+    address: 138
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_138_S"
+    address: 138
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_139_U"
+    address: 139
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_139_S"
+    address: 139
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_140_U"
+    address: 140
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_140_S"
+    address: 140
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_141_U"
+    address: 141
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_141_S"
+    address: 141
+    register_type: holding
+    value_type: S_WORD
     
   # REG_142 - Work Mode
   - platform: modbus_controller
@@ -438,7 +1898,97 @@ sensor:
     value_type: S_WORD
 
   # ============================================
-  # ZONA 150-200: PV Data
+  # ZONA 143-200: TIME OF USE - AICI SUNT!
+  # ============================================
+  
+  # REG_143-149 - TOU Slots Start/End
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_143_U"
+    address: 143
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_143_S"
+    address: 143
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_144_U"
+    address: 144
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_144_S"
+    address: 144
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_145_U"
+    address: 145
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_145_S"
+    address: 145
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_146_U"
+    address: 146
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_146_S"
+    address: 146
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_147_U"
+    address: 147
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_147_S"
+    address: 147
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_148_U"
+    address: 148
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_148_S"
+    address: 148
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_149_U"
+    address: 149
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_149_S"
+    address: 149
+    register_type: holding
+    value_type: S_WORD
+
+  # ============================================
+  # ZONA 150-200: PV Data + TOU continuation
   # ============================================
   
   # REG_150 - PV1 Voltage
@@ -476,6 +2026,32 @@ sensor:
     value_type: S_WORD
     filters:
       - multiply: 0.1
+
+  # REG_152-153 - TOU sau PV
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_152_U"
+    address: 152
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_152_S"
+    address: 152
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_153_U"
+    address: 153
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_153_S"
+    address: 153
+    register_type: holding
+    value_type: S_WORD
     
   # REG_154 - PV2 Voltage
   - platform: modbus_controller
@@ -512,6 +2088,368 @@ sensor:
     value_type: S_WORD
     filters:
       - multiply: 0.1
+
+  # REG_156-185 - TOU + alte date
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_156_U"
+    address: 156
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_156_S"
+    address: 156
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_157_U"
+    address: 157
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_157_S"
+    address: 157
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_158_U"
+    address: 158
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_158_S"
+    address: 158
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_159_U"
+    address: 159
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_159_S"
+    address: 159
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_160_U"
+    address: 160
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_160_S"
+    address: 160
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_161_U"
+    address: 161
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_161_S"
+    address: 161
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_162_U"
+    address: 162
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_162_S"
+    address: 162
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_163_U"
+    address: 163
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_163_S"
+    address: 163
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_164_U"
+    address: 164
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_164_S"
+    address: 164
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_165_U"
+    address: 165
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_165_S"
+    address: 165
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_166_U"
+    address: 166
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_166_S"
+    address: 166
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_167_U"
+    address: 167
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_167_S"
+    address: 167
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_168_U"
+    address: 168
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_168_S"
+    address: 168
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_169_U"
+    address: 169
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_169_S"
+    address: 169
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_170_U"
+    address: 170
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_170_S"
+    address: 170
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_171_U"
+    address: 171
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_171_S"
+    address: 171
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_172_U"
+    address: 172
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_172_S"
+    address: 172
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_173_U"
+    address: 173
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_173_S"
+    address: 173
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_174_U"
+    address: 174
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_174_S"
+    address: 174
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_175_U"
+    address: 175
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_175_S"
+    address: 175
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_176_U"
+    address: 176
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_176_S"
+    address: 176
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_177_U"
+    address: 177
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_177_S"
+    address: 177
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_178_U"
+    address: 178
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_178_S"
+    address: 178
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_179_U"
+    address: 179
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_179_S"
+    address: 179
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_180_U"
+    address: 180
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_180_S"
+    address: 180
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_181_U"
+    address: 181
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_181_S"
+    address: 181
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_182_U"
+    address: 182
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_182_S"
+    address: 182
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_183_U"
+    address: 183
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_183_S"
+    address: 183
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_184_U"
+    address: 184
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_184_S"
+    address: 184
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_185_U"
+    address: 185
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_185_S"
+    address: 185
+    register_type: holding
+    value_type: S_WORD
     
   # REG_186 - PV1 Power
   - platform: modbus_controller
@@ -541,8 +2479,274 @@ sensor:
     register_type: holding
     value_type: S_WORD
 
+  # REG_188-209 - Registri lipsa
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_188_U"
+    address: 188
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_188_S"
+    address: 188
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_189_U"
+    address: 189
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_189_S"
+    address: 189
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_190_U"
+    address: 190
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_190_S"
+    address: 190
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_191_U"
+    address: 191
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_191_S"
+    address: 191
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_192_U"
+    address: 192
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_192_S"
+    address: 192
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_193_U"
+    address: 193
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_193_S"
+    address: 193
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_194_U"
+    address: 194
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_194_S"
+    address: 194
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_195_U"
+    address: 195
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_195_S"
+    address: 195
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_196_U"
+    address: 196
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_196_S"
+    address: 196
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_197_U"
+    address: 197
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_197_S"
+    address: 197
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_198_U"
+    address: 198
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_198_S"
+    address: 198
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_199_U"
+    address: 199
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_199_S"
+    address: 199
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_200_U"
+    address: 200
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_200_S"
+    address: 200
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_201_U"
+    address: 201
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_201_S"
+    address: 201
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_202_U"
+    address: 202
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_202_S"
+    address: 202
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_203_U"
+    address: 203
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_203_S"
+    address: 203
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_204_U"
+    address: 204
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_204_S"
+    address: 204
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_205_U"
+    address: 205
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_205_S"
+    address: 205
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_206_U"
+    address: 206
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_206_S"
+    address: 206
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_207_U"
+    address: 207
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_207_S"
+    address: 207
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_208_U"
+    address: 208
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_208_S"
+    address: 208
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_209_U"
+    address: 209
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_209_S"
+    address: 209
+    register_type: holding
+    value_type: S_WORD
+
   # ============================================
-  # ZONA 210-250: Battery Data
+  # ZONA 210-250: Battery Real-Time Data
   # ============================================
   
   # REG_210 - Battery Voltage
@@ -594,6 +2798,20 @@ sensor:
     address: 212
     register_type: holding
     value_type: S_WORD
+
+  # REG_213 - Lipsa
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_213_U"
+    address: 213
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_213_S"
+    address: 213
+    register_type: holding
+    value_type: S_WORD
     
   # REG_214 - Battery SOC
   - platform: modbus_controller
@@ -606,6 +2824,20 @@ sensor:
     modbus_controller_id: ${modbus_controller_id}
     name: "REG_214_Battery_SOC_S"
     address: 214
+    register_type: holding
+    value_type: S_WORD
+
+  # REG_215 - Lipsa
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_215_U"
+    address: 215
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_215_S"
+    address: 215
     register_type: holding
     value_type: S_WORD
     
@@ -626,6 +2858,164 @@ sensor:
     value_type: S_WORD
     filters:
       - multiply: 0.1
+
+  # REG_217-229 - Registri lipsa
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_217_U"
+    address: 217
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_217_S"
+    address: 217
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_218_U"
+    address: 218
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_218_S"
+    address: 218
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_219_U"
+    address: 219
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_219_S"
+    address: 219
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_220_U"
+    address: 220
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_220_S"
+    address: 220
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_221_U"
+    address: 221
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_221_S"
+    address: 221
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_222_U"
+    address: 222
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_222_S"
+    address: 222
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_223_U"
+    address: 223
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_223_S"
+    address: 223
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_224_U"
+    address: 224
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_224_S"
+    address: 224
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_225_U"
+    address: 225
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_225_S"
+    address: 225
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_226_U"
+    address: 226
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_226_S"
+    address: 226
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_227_U"
+    address: 227
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_227_S"
+    address: 227
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_228_U"
+    address: 228
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_228_S"
+    address: 228
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_229_U"
+    address: 229
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_229_S"
+    address: 229
+    register_type: holding
+    value_type: S_WORD
     
   # REG_230 - Max Charge Power
   - platform: modbus_controller
@@ -655,8 +3045,358 @@ sensor:
     register_type: holding
     value_type: S_WORD
 
+  # REG_232-339 - Registri lipsa
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_232_U"
+    address: 232
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_232_S"
+    address: 232
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_233_U"
+    address: 233
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_233_S"
+    address: 233
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_234_U"
+    address: 234
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_234_S"
+    address: 234
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_235_U"
+    address: 235
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_235_S"
+    address: 235
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_236_U"
+    address: 236
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_236_S"
+    address: 236
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_237_U"
+    address: 237
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_237_S"
+    address: 237
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_238_U"
+    address: 238
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_238_S"
+    address: 238
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_239_U"
+    address: 239
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_239_S"
+    address: 239
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_240_U"
+    address: 240
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_240_S"
+    address: 240
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_241_U"
+    address: 241
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_241_S"
+    address: 241
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_242_U"
+    address: 242
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_242_S"
+    address: 242
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_243_U"
+    address: 243
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_243_S"
+    address: 243
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_244_U"
+    address: 244
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_244_S"
+    address: 244
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_245_U"
+    address: 245
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_245_S"
+    address: 245
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_246_U"
+    address: 246
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_246_S"
+    address: 246
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_247_U"
+    address: 247
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_247_S"
+    address: 247
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_248_U"
+    address: 248
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_248_S"
+    address: 248
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_249_U"
+    address: 249
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_249_S"
+    address: 249
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_250_U"
+    address: 250
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_250_S"
+    address: 250
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_251_U"
+    address: 251
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_251_S"
+    address: 251
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_252_U"
+    address: 252
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_252_S"
+    address: 252
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_253_U"
+    address: 253
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_253_S"
+    address: 253
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_254_U"
+    address: 254
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_254_S"
+    address: 254
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_255_U"
+    address: 255
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_255_S"
+    address: 255
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_256_U"
+    address: 256
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_256_S"
+    address: 256
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_257_U"
+    address: 257
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_257_S"
+    address: 257
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_258_U"
+    address: 258
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_258_S"
+    address: 258
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_259_U"
+    address: 259
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_259_S"
+    address: 259
+    register_type: holding
+    value_type: S_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_260_U"
+    address: 260
+    register_type: holding
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "REG_260_S"
+    address: 260
+    register_type: holding
+    value_type: S_WORD
+
   # ============================================
-  # ZONA 340-380: Power Control
+  # ZONA 340: Power Control
   # ============================================
   
   # REG_340 - Max Sell Power
