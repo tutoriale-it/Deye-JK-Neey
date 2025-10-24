@@ -1,0 +1,1293 @@
+substitutions:
+  name: CHANGE-ME #Accepta doar litere mici
+  device_description: "ESPHome - Deye - Config"
+  modbus_controller_id: deye_8k
+  device_type: deye
+  inverter_model: "SUN-8K-SG05LP1-EU"
+
+##############################################################
+esphome:
+  name: ${name}
+  friendly_name: ${name}
+
+##############################################################
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+##############################################################
+logger:
+  level: WARN
+
+##############################################################
+api:
+  encryption:
+    key: "CHANGE-ME"
+  reboot_timeout: 0s
+
+##############################################################
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  use_address: 10.10.9.230
+  power_save_mode: none
+  fast_connect: on
+  manual_ip:
+    static_ip: 0.0.0.0
+    gateway: 0.0.0.0
+    subnet: 255.255.255.0
+    dns1: 1.1.1.1
+
+##############################################################
+web_server:
+  local: true
+  port: 80
+  version: 2
+  include_internal: false
+  auth:
+    username: !secret web_server_username
+    password: !secret web_server_password
+
+##############################################################
+ota:
+  platform: esphome
+  password: !secret ota_password
+
+##############################################################
+# TIME - Sincronizare ora (HA primary, SNTP backup)
+##############################################################
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+    timezone: Europe/Bucharest
+    on_time_sync:
+      then:
+        - logger.log: "Ora sincronizata cu Home Assistant"
+  
+  - platform: sntp
+    id: sntp_time
+    timezone: Europe/Bucharest
+    servers:
+      - time.google.com
+      - 0.pool.ntp.org
+      - 1.pool.ntp.org
+    on_time_sync:
+      then:
+        - logger.log: "Ora sincronizata cu SNTP (backup)"
+    on_time:
+      # Reset zilnic la 12:00
+      - seconds: 0
+        minutes: 0
+        hours: 12
+        then:
+          - lambda: |-
+              ESP_LOGI("virtual_sensors", "=== RESET ZILNIC la 12:00 ===");
+              ESP_LOGI("virtual_sensors", "Daily: %.2f kWh", id(virtual_daily_batt_discharge));
+              ESP_LOGI("virtual_sensors", "Yesterday: %.2f kWh", id(virtual_batt_discharge_yesterday));
+              
+              // Rotatie valori
+              id(virtual_batt_discharge_day_before) = id(virtual_batt_discharge_yesterday);
+              id(virtual_batt_discharge_yesterday) = id(virtual_daily_batt_discharge);
+              id(virtual_daily_batt_discharge) = 0.0;
+              
+              ESP_LOGI("virtual_sensors", "Nou: Daily=0.0, Yesterday=%.2f, DayBefore=%.2f", 
+                       id(virtual_batt_discharge_yesterday),
+                       id(virtual_batt_discharge_day_before));
+      
+      # Reset lunar pe 1 a lunii la 00:00
+      - seconds: 0
+        minutes: 0
+        hours: 0
+        days_of_month: 1
+        then:
+          - lambda: |-
+              ESP_LOGI("virtual_sensors", "=== RESET LUNAR la 01.00:00 ===");
+              ESP_LOGI("virtual_sensors", "Luna trecuta:");
+              ESP_LOGI("virtual_sensors", "  Batt Discharge: %.2f kWh", id(virtual_monthly_batt_discharge));
+              ESP_LOGI("virtual_sensors", "  Batt Charge: %.2f kWh", id(virtual_monthly_batt_charge));
+              ESP_LOGI("virtual_sensors", "  Load: %.2f kWh", id(virtual_monthly_load));
+              
+              // PV - salvam noua referinta
+              float total_pv_now = id(deye_pv_total_energy).state;
+              if (!isnan(total_pv_now)) {
+                ESP_LOGI("virtual_sensors", "  PV: %.2f kWh (Total: %.1f kWh)", 
+                         total_pv_now - id(month_start_pv_total), total_pv_now);
+                id(month_start_pv_total) = total_pv_now;
+                ESP_LOGI("virtual_sensors", "  Noua referinta PV: %.1f kWh", total_pv_now);
+              }
+              
+              ESP_LOGI("virtual_sensors", "  Grid Import: %.2f kWh", id(virtual_monthly_grid_import));
+              
+              // Reset valorile lunare (exceptand PV care e calculat dinamic)
+              id(virtual_monthly_batt_discharge) = 0.0;
+              id(virtual_monthly_batt_charge) = 0.0;
+              id(virtual_monthly_load) = 0.0;
+              id(virtual_monthly_grid_import) = 0.0;
+
+##############################################################
+uart:
+  id: mod_bus
+  tx_pin: GPIO17
+  rx_pin: GPIO16
+  baud_rate: 9600
+  stop_bits: 1
+
+##############################################################
+modbus:
+  id: modbus1
+  uart_id: mod_bus
+
+##############################################################
+modbus_controller:
+  - id: ${modbus_controller_id}
+    address: 0x1
+    modbus_id: modbus1
+    setup_priority: -10
+    update_interval: 20s
+
+##############################################################
+# GLOBALS
+##############################################################
+globals:
+  # Watchdog
+  - id: last_modbus_update
+    type: unsigned long
+    restore_value: no
+    initial_value: '0'
+  - id: wifi_retry_count
+    type: int
+    restore_value: no
+    initial_value: '0'
+  - id: last_pv1_voltage
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+  - id: last_pv2_voltage
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+  - id: last_batt_voltage
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+  - id: last_grid_voltage
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+  - id: last_batt_soc
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+  
+  # Senzori virtuali - Previous values (pentru detectare diferență)
+  - id: previous_deye_batt_discharge
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: previous_deye_batt_charge
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: previous_deye_load
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: previous_deye_grid_import
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  
+  # PV Monthly - REFERINȚĂ (start lună)
+  - id: month_start_pv_total
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  
+  # Senzori virtuali - Daily (doar battery discharge)
+  - id: virtual_daily_batt_discharge
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: virtual_batt_discharge_yesterday
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: virtual_batt_discharge_day_before
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  
+  # Senzori virtuali - Monthly
+  - id: virtual_monthly_batt_discharge
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: virtual_monthly_batt_charge
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: virtual_monthly_load
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: virtual_monthly_pv
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+  - id: virtual_monthly_grid_import
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+
+##############################################################
+# SENZORI - ORIGINALI
+##############################################################
+sensor:
+  # PV TOTAL Power
+  - platform: template
+    name: "${device_type}_pv_total_power"
+    id: pv_total_power
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: "measurement"
+    accuracy_decimals: 0
+    icon: "mdi:solar-power-variant"
+    update_interval: 20s
+    lambda: |-
+      if (isnan(id(pv1_power).state) || isnan(id(pv2_power).state)) {
+        return 0;
+      }
+      return id(pv1_power).state + id(pv2_power).state;
+
+  # PV1 Power
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_pv1_power"
+    id: pv1_power
+    register_type: holding
+    address: 186
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: "measurement"
+    accuracy_decimals: 0
+    icon: "mdi:solar-power"
+    value_type: U_WORD
+
+  # PV2 Power
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_pv2_power"
+    id: pv2_power
+    register_type: holding
+    address: 187
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: "measurement"
+    accuracy_decimals: 0
+    icon: "mdi:solar-power"
+    value_type: U_WORD
+
+  # PV1 Current
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_pv1_current"
+    register_type: holding
+    address: 110
+    unit_of_measurement: "A"
+    device_class: current
+    state_class: "measurement"
+    accuracy_decimals: 1
+    icon: "mdi:current-dc"
+    filters:
+      - multiply: 0.1
+    value_type: U_WORD
+
+  # PV2 Current
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_pv2_current"
+    register_type: holding
+    address: 112
+    unit_of_measurement: "A"
+    device_class: current
+    state_class: "measurement"
+    accuracy_decimals: 1
+    icon: "mdi:current-dc"
+    filters:
+      - multiply: 0.1
+    value_type: U_WORD
+
+  # PV1 Voltage
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_pv1_voltage"
+    id: pv1_voltage
+    register_type: holding
+    address: 109
+    unit_of_measurement: "V"
+    device_class: voltage
+    state_class: "measurement"
+    accuracy_decimals: 1
+    icon: "mdi:lightning-bolt"
+    filters:
+      - multiply: 0.1
+    value_type: U_WORD
+
+  # PV2 Voltage
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_pv2_voltage"
+    id: pv2_voltage
+    register_type: holding
+    address: 111
+    unit_of_measurement: "V"
+    device_class: voltage
+    state_class: "measurement"
+    accuracy_decimals: 1
+    icon: "mdi:lightning-bolt"
+    filters:
+      - multiply: 0.1
+    value_type: U_WORD
+
+  # Day PV Energy
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_pv_day_energy"
+    id: deye_pv_day_energy
+    register_type: holding
+    address: 108
+    unit_of_measurement: "kWh"
+    state_class: "total_increasing"
+    device_class: energy
+    accuracy_decimals: 1
+    icon: "mdi:solar-power"
+    filters:
+      - multiply: 0.1
+    value_type: U_WORD
+
+  # Total PV Energy
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_pv_total_energy"
+    id: deye_pv_total_energy
+    register_type: holding
+    address: 96
+    unit_of_measurement: "kWh"
+    state_class: "total_increasing"
+    device_class: energy
+    accuracy_decimals: 1
+    icon: "mdi:solar-power-variant"
+    filters:
+      - multiply: 0.1
+    value_type: U_WORD
+
+  # Battery SOC
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_batt_soc"
+    id: batt_soc
+    register_type: holding
+    address: 184
+    unit_of_measurement: "%"
+    state_class: "measurement"
+    device_class: battery
+    accuracy_decimals: 0
+    icon: "mdi:battery"
+    value_type: U_WORD
+
+  # Battery Power
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_batt_power"
+    register_type: holding
+    address: 190
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: "measurement"
+    accuracy_decimals: 0
+    icon: "mdi:battery-charging"
+    filters:
+      - multiply: -1
+    value_type: S_WORD
+
+  # Battery Voltage
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_batt_voltage"
+    id: batt_voltage
+    register_type: holding
+    address: 183
+    unit_of_measurement: "V"
+    device_class: voltage
+    state_class: "measurement"
+    accuracy_decimals: 2
+    icon: "mdi:lightning-bolt"
+    filters:
+      - multiply: 0.01
+    value_type: U_WORD
+
+  # Battery Current
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_batt_current"
+    register_type: holding
+    address: 191
+    unit_of_measurement: "A"
+    device_class: current
+    state_class: "measurement"
+    accuracy_decimals: 2
+    icon: "mdi:current-dc"
+    filters:
+      - multiply: -0.01
+    value_type: S_WORD
+
+  # Battery Temperature
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_batt_temperature"
+    register_type: holding
+    address: 182
+    unit_of_measurement: "°C"
+    device_class: temperature
+    accuracy_decimals: 1
+    icon: "mdi:thermometer"
+    filters:
+      - offset: -1000
+      - multiply: 0.1
+    value_type: U_WORD
+
+  # Day Battery Charge
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_batt_day_charge"
+    id: deye_batt_day_charge
+    register_type: holding
+    address: 70
+    unit_of_measurement: "kWh"
+    state_class: "total_increasing"
+    device_class: energy
+    accuracy_decimals: 1
+    icon: "mdi:battery-plus"
+    filters:
+      - multiply: 0.1
+    value_type: U_WORD
+
+  # Day Battery Discharge
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_batt_day_discharge"
+    id: deye_batt_day_discharge
+    register_type: holding
+    address: 71
+    unit_of_measurement: "kWh"
+    state_class: "total_increasing"
+    device_class: energy
+    accuracy_decimals: 1
+    icon: "mdi:battery-minus"
+    filters:
+      - multiply: 0.1
+    value_type: U_WORD
+
+  # Grid Power
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_grid_power"
+    register_type: holding
+    address: 169
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: "measurement"
+    accuracy_decimals: 0
+    icon: "mdi:transmission-tower"
+    value_type: S_WORD
+
+  # Grid Voltage
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_grid_voltage"
+    id: deye_grid_voltage
+    register_type: holding
+    address: 150
+    unit_of_measurement: "V"
+    device_class: voltage
+    state_class: "measurement"
+    accuracy_decimals: 1
+    icon: "mdi:lightning-bolt"
+    filters:
+      - multiply: 0.1
+    value_type: U_WORD
+
+  # Grid Current
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_grid_current"
+    register_type: holding
+    address: 160
+    unit_of_measurement: "A"
+    device_class: current
+    state_class: "measurement"
+    accuracy_decimals: 2
+    icon: "mdi:current-ac"
+    filters:
+      - multiply: 0.01
+    value_type: S_WORD
+
+  # Grid Frequency
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_grid_frequency"
+    id: deye_grid_frequency
+    register_type: holding
+    address: 79
+    unit_of_measurement: "Hz"
+    state_class: "measurement"
+    accuracy_decimals: 2
+    icon: "mdi:sine-wave"
+    filters:
+      - multiply: 0.01
+    value_type: U_WORD
+
+  # Day Grid Export
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_grid_day_export"
+    register_type: holding
+    address: 81
+    unit_of_measurement: "kWh"
+    state_class: "total_increasing"
+    device_class: energy
+    accuracy_decimals: 1
+    icon: "mdi:transmission-tower-export"
+    filters:
+      - multiply: 0.1
+    value_type: U_WORD
+
+  # Day Grid Import
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_grid_day_import"
+    id: deye_grid_day_import
+    register_type: holding
+    address: 76
+    unit_of_measurement: "kWh"
+    state_class: "total_increasing"
+    device_class: energy
+    accuracy_decimals: 1
+    icon: "mdi:transmission-tower-import"
+    filters:
+      - multiply: 0.1
+    value_type: U_WORD
+
+  # Load Power
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_load_power"
+    id: load_power_sensor
+    register_type: holding
+    address: 178
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: "measurement"
+    accuracy_decimals: 0
+    icon: "mdi:home-lightning-bolt"
+    value_type: S_WORD
+
+  # Load Voltage
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_load_voltage"
+    register_type: holding
+    address: 154
+    unit_of_measurement: "V"
+    device_class: voltage
+    state_class: "measurement"
+    accuracy_decimals: 1
+    icon: "mdi:home-lightning-bolt"
+    filters:
+      - multiply: 0.1
+    value_type: U_WORD
+
+  # Load Frequency
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_load_frequency"
+    register_type: holding
+    address: 193
+    unit_of_measurement: "Hz"
+    state_class: "measurement"
+    accuracy_decimals: 2
+    icon: "mdi:sine-wave"
+    filters:
+      - multiply: 0.01
+    value_type: U_WORD
+
+  # Day Load Energy
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_load_day_energy"
+    id: deye_load_day_energy
+    register_type: holding
+    address: 84
+    unit_of_measurement: "kWh"
+    state_class: "total_increasing"
+    device_class: energy
+    accuracy_decimals: 1
+    icon: "mdi:home-lightning-bolt-outline"
+    filters:
+      - multiply: 0.1
+    value_type: U_WORD
+
+##############################################################
+# BATTERY SETTINGS - READ
+##############################################################
+  # Battery Capacity - READ (doar citire, nu scriere)
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_read_capacity"
+    register_type: holding
+    address: 204
+    unit_of_measurement: "Ah"
+    state_class: "measurement"
+    icon: "mdi:battery-high"
+    accuracy_decimals: 0
+    value_type: U_WORD
+
+##############################################################
+# INVERTER
+##############################################################
+  # Inverter Temperature
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_inverter_temperature"
+    register_type: holding
+    address: 90
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: "measurement"
+    accuracy_decimals: 1
+    icon: "mdi:thermometer"
+    filters:
+      - offset: -1000
+      - multiply: 0.1
+    value_type: U_WORD
+
+  # Inverter Load %
+  - platform: template
+    name: "${device_type}_inverter_load"
+    unit_of_measurement: "%"
+    state_class: "measurement"
+    accuracy_decimals: 0
+    icon: "mdi:gauge"
+    update_interval: 20s
+    lambda: |-
+      float load_power = id(load_power_sensor).state;
+      if (isnan(load_power) || load_power < 0) {
+        return 0;
+      }
+      float load_percent = (load_power / 8000.0) * 100.0;
+      if (load_percent > 100) load_percent = 100;
+      return load_percent;
+
+##############################################################
+# SENZORI VIRTUALI
+##############################################################
+  # ZILNIC - Battery Discharge
+  - platform: template
+    name: "${device_type}_virtual_battery_discharge_daily"
+    id: sensor_battery_discharge_daily
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    icon: "mdi:battery-minus"
+    update_interval: 300s
+    lambda: |-
+      return id(virtual_daily_batt_discharge);
+  
+  - platform: template
+    name: "${device_type}_virtual_battery_discharge_yesterday"
+    id: sensor_battery_discharge_yesterday
+    unit_of_measurement: "kWh"
+    device_class: energy
+    accuracy_decimals: 2
+    icon: "mdi:battery-clock"
+    update_interval: 60s
+    lambda: |-
+      return id(virtual_batt_discharge_yesterday);
+  
+  - platform: template
+    name: "${device_type}_virtual_battery_discharge_day_before"
+    id: sensor_battery_discharge_day_before
+    unit_of_measurement: "kWh"
+    device_class: energy
+    accuracy_decimals: 2
+    icon: "mdi:battery-clock-outline"
+    update_interval: 60s
+    lambda: |-
+      return id(virtual_batt_discharge_day_before);
+  
+  # LUNARI
+  - platform: template
+    name: "${device_type}_virtual_monthly_battery_discharge"
+    id: sensor_monthly_battery_discharge
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    icon: "mdi:battery-arrow-down"
+    update_interval: 60s
+    lambda: |-
+      return id(virtual_monthly_batt_discharge);
+  
+  - platform: template
+    name: "${device_type}_virtual_monthly_battery_charge"
+    id: sensor_monthly_battery_charge
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    icon: "mdi:battery-plus"
+    update_interval: 60s
+    lambda: |-
+      return id(virtual_monthly_batt_charge);
+  
+  - platform: template
+    name: "${device_type}_virtual_monthly_house_consumption"
+    id: sensor_monthly_house
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    icon: "mdi:home-lightning-bolt"
+    update_interval: 60s
+    lambda: |-
+      return id(virtual_monthly_load);
+  
+  - platform: template
+    name: "${device_type}_virtual_monthly_solar_production"
+    id: sensor_monthly_solar
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total
+    accuracy_decimals: 2
+    icon: "mdi:solar-power"
+    update_interval: 60s
+    lambda: |-
+      float total_pv = id(deye_pv_total_energy).state;
+      float month_start = id(month_start_pv_total);
+      
+      if (isnan(total_pv)) {
+        return 0.0;
+      }
+      
+      return total_pv - month_start;
+  
+  # REFERINȚĂ PV LUNARĂ - VIZIBILĂ
+  - platform: template
+    name: "${device_type}_pv_monthly_reference"
+    unit_of_measurement: "kWh"
+    device_class: energy
+    accuracy_decimals: 1
+    icon: "mdi:bookmark"
+    update_interval: 60s
+    lambda: |-
+      return id(month_start_pv_total);
+  
+  - platform: template
+    name: "${device_type}_virtual_monthly_grid_import"
+    id: sensor_monthly_grid
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    icon: "mdi:transmission-tower-import"
+    update_interval: 60s
+    lambda: |-
+      return id(virtual_monthly_grid_import);
+  
+  # Virtual SOC - Calculat precis pentru LiFePO4 16S (49V-55.5V)
+  - platform: template
+    name: "${device_type}_virtual_soc"
+    id: virtual_soc_sensor
+    unit_of_measurement: "%"
+    device_class: battery
+    state_class: "measurement"
+    accuracy_decimals: 1
+    icon: "mdi:battery"
+    update_interval: 10s
+    lambda: |-
+      float v = id(batt_voltage).state;
+      
+      if (isnan(v)) {
+        return 0.0;
+      }
+      
+      // Limitare la range-ul tău (49V - 55.5V)
+      if (v <= 49.0) return 0.0;
+      if (v >= 55.5) return 100.0;
+      
+      // Lookup table pentru LiFePO4 16S
+      // Format: {voltage, soc}
+      float soc = 0.0;
+      
+      if (v >= 55.5) {
+        soc = 100.0;
+      } else if (v >= 54.4) {
+        // 54.4V-55.5V → 85%-100% (1.1V range = 15% SOC)
+        soc = 85.0 + ((v - 54.4) / 1.1) * 15.0;
+      } else if (v >= 53.6) {
+        // 53.6V-54.4V → 70%-85% (0.8V range = 15% SOC)
+        soc = 70.0 + ((v - 53.6) / 0.8) * 15.0;
+      } else if (v >= 52.8) {
+        // 52.8V-53.6V → 55%-70% (0.8V range = 15% SOC)
+        soc = 55.0 + ((v - 52.8) / 0.8) * 15.0;
+      } else if (v >= 52.0) {
+        // 52.0V-52.8V → 40%-55% (0.8V range = 15% SOC)
+        soc = 40.0 + ((v - 52.0) / 0.8) * 15.0;
+      } else if (v >= 51.2) {
+        // 51.2V-52.0V → 25%-40% (0.8V range = 15% SOC)
+        soc = 25.0 + ((v - 51.2) / 0.8) * 15.0;
+      } else if (v >= 50.4) {
+        // 50.4V-51.2V → 12%-25% (0.8V range = 13% SOC)
+        soc = 12.0 + ((v - 50.4) / 0.8) * 13.0;
+      } else if (v >= 49.6) {
+        // 49.6V-50.4V → 5%-12% (0.8V range = 7% SOC)
+        soc = 5.0 + ((v - 49.6) / 0.8) * 7.0;
+      } else {
+        // 49.0V-49.6V → 0%-5% (0.6V range = 5% SOC)
+        soc = 0.0 + ((v - 49.0) / 0.6) * 5.0;
+      }
+      
+      // Asigură-te că rămâne în range 0-100
+      if (soc < 0.0) soc = 0.0;
+      if (soc > 100.0) soc = 100.0;
+      
+      return soc;
+  
+  # WiFi Signal Strength
+  - platform: wifi_signal
+    name: "${device_type}_wifi_signal_db"
+    id: wifi_signal_db
+    update_interval: 60s
+    internal: true
+  
+  - platform: template
+    name: "${device_type}_wifi_signal_percent"
+    unit_of_measurement: "%"
+    icon: "mdi:wifi"
+    update_interval: 60s
+    accuracy_decimals: 0
+    lambda: |-
+      float dbm = id(wifi_signal_db).state;
+      if (isnan(dbm)) {
+        return 0;
+      }
+      // Conversie dBm la procente (standard WiFi)
+      // -50 dBm = 100% (excelent)
+      // -100 dBm = 0% (foarte slab)
+      float quality;
+      if (dbm <= -100) {
+        quality = 0;
+      } else if (dbm >= -50) {
+        quality = 100;
+      } else {
+        quality = 2 * (dbm + 100);
+      }
+      return quality;
+
+##############################################################
+# BATTERY SETTINGS - WRITE
+##############################################################
+number:
+  # Absorption Voltage
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_set_absorption_voltage"
+    id: set_absorption_voltage
+    address: 202
+    value_type: U_WORD
+    use_write_multiple: true
+    multiply: 100
+    min_value: 48.0
+    max_value: 60.0
+    step: 0.1
+    unit_of_measurement: "V"
+    mode: box
+    icon: "mdi:battery-charging-high"
+
+  # Float Voltage
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_set_float_voltage"
+    id: set_float_voltage
+    address: 203
+    value_type: U_WORD
+    use_write_multiple: true
+    multiply: 100
+    min_value: 48.0
+    max_value: 58.0
+    step: 0.1
+    unit_of_measurement: "V"
+    mode: box
+    icon: "mdi:battery-charging-medium"
+
+  # Battery Empty Voltage
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_set_empty_voltage"
+    id: set_empty_voltage
+    address: 205
+    value_type: U_WORD
+    use_write_multiple: true
+    multiply: 100
+    min_value: 40.0
+    max_value: 50.0
+    step: 0.1
+    unit_of_measurement: "V"
+    mode: box
+    icon: "mdi:battery-outline"
+
+  # Battery Max Charge Current
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_set_max_charge_current"
+    id: set_max_charge_current
+    address: 210
+    value_type: U_WORD
+    use_write_multiple: true
+    min_value: 0
+    max_value: 200
+    step: 1
+    unit_of_measurement: "A"
+    mode: box
+    icon: "mdi:battery-charging-high"
+
+  # Battery Max Discharge Current
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_set_max_discharge_current"
+    id: set_max_discharge_current
+    address: 211
+    value_type: U_WORD
+    use_write_multiple: true
+    min_value: 0
+    max_value: 200
+    step: 1
+    unit_of_measurement: "A"
+    mode: box
+    icon: "mdi:battery-arrow-down"
+
+  # Battery Shutdown Voltage
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_set_shutdown_voltage"
+    id: set_shutdown_voltage
+    address: 220
+    value_type: U_WORD
+    use_write_multiple: true
+    multiply: 100
+    min_value: 40.0
+    max_value: 50.0
+    step: 0.1
+    unit_of_measurement: "V"
+    mode: box
+    icon: "mdi:battery-alert"
+
+  # Battery Restart Voltage
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_set_restart_voltage"
+    id: set_restart_voltage
+    address: 221
+    value_type: U_WORD
+    use_write_multiple: true
+    multiply: 100
+    min_value: 40.0
+    max_value: 52.0
+    step: 0.1
+    unit_of_measurement: "V"
+    mode: box
+    icon: "mdi:battery-arrow-up"
+
+  # Battery Low Voltage
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_set_low_voltage"
+    id: set_low_voltage
+    address: 222
+    value_type: U_WORD
+    use_write_multiple: true
+    multiply: 100
+    min_value: 40.0
+    max_value: 52.0
+    step: 0.1
+    unit_of_measurement: "V"
+    mode: box
+    icon: "mdi:battery-low"
+
+##############################################################
+# STATUS
+##############################################################
+text_sensor:
+  # WiFi Status
+  - platform: template
+    name: "${device_type}_wifi_status"
+    id: wifi_status_sensor
+    icon: "mdi:wifi"
+    update_interval: 60s
+    lambda: |-
+      if (wifi::global_wifi_component->is_connected()) {
+        return {"WiFi OK"};
+      } else {
+        int count = id(wifi_retry_count);
+        char status[20];
+        sprintf(status, "Retry (%d/5)", count);
+        return {(std::string)status};
+      }
+  
+  # ESP Current Time
+  - platform: template
+    name: "${device_type}_current_time"
+    id: esp_current_time
+    icon: "mdi:clock-outline"
+    update_interval: 1s
+    lambda: |-
+      auto time = id(homeassistant_time).now();
+      if (!time.is_valid()) {
+        return {"Waiting for time sync..."};
+      }
+      
+      // Actualizeaza doar la secunda 00
+      if (time.second != 0) {
+        return {};
+      }
+      
+      char buf[17];
+      sprintf(buf, "%04d-%02d-%02d %02d:%02d", 
+              time.year, time.month, time.day_of_month,
+              time.hour, time.minute);
+      return {buf};
+
+  # Inverter Status
+  - platform: modbus_controller
+    modbus_controller_id: ${modbus_controller_id}
+    name: "${device_type}_inverter_status"
+    register_type: holding
+    address: 59
+    icon: "mdi:information-outline"
+    raw_encode: HEXBYTES
+    lambda: |-
+      uint16_t value = modbus_controller::word_from_hex_str(x, 0);
+      switch (value) {
+        case 0: return std::string("Standby");
+        case 1: return std::string("Self-check");
+        case 2: return std::string("Normal");
+        case 3: return std::string("Alarm");
+        case 4: return std::string("Fault");
+        default: return std::string("Unknown");
+      }
+      return x;
+
+##############################################################
+# WATCHDOG & INTERVALS
+##############################################################
+binary_sensor:
+  # WiFi connectivity status
+  - platform: template
+    name: "${device_type}_wifi_connected"
+    id: wifi_connected
+    device_class: connectivity
+    lambda: |-
+      return wifi::global_wifi_component->is_connected();
+  
+  # Senzor de monitorizare comunicatie Modbus
+  - platform: template
+    name: "${device_type}_modbus_alive"
+    id: modbus_alive
+    device_class: connectivity
+    lambda: |-
+      unsigned long now = millis();
+      unsigned long last = id(last_modbus_update);
+      
+      // Verifică dacă senzorii au valori valide (Modbus comunică)
+      bool pv1_valid = !isnan(id(pv1_voltage).state);
+      bool grid_valid = !isnan(id(deye_grid_voltage).state);
+      bool batt_valid = !isnan(id(batt_soc).state);
+      
+      // Dacă cel puțin 2 din 3 senzori sunt valizi, Modbus e OK
+      int valid_count = (pv1_valid ? 1 : 0) + (grid_valid ? 1 : 0) + (batt_valid ? 1 : 0);
+      
+      if (valid_count >= 2) {
+        // Modbus comunică, update timestamp
+        id(last_modbus_update) = now;
+        return true;
+      }
+      
+      // Verifică dacă au trecut 5 minute fără comunicare validă
+      if (last > 0 && (now - last) > 300000) {
+        ESP_LOGW("watchdog", "Modbus NU COMUNICA de 5 minute!");
+        return false;
+      }
+      
+      return (last > 0);
+
+interval:
+  # Watchdog WiFi - verifica la fiecare 60s
+  - interval: 60s
+    then:
+      - lambda: |-
+          bool wifi_ok = wifi::global_wifi_component->is_connected();
+          
+          if (wifi_ok) {
+            // WiFi conectat - reset counter si update status
+            if (id(wifi_retry_count) != 0) {
+              ESP_LOGI("watchdog", "WiFi reconectat!");
+            }
+            id(wifi_retry_count) = 0;
+            id(wifi_status_sensor).publish_state("WiFi OK");
+          } else {
+            // WiFi deconectat - creste counter
+            id(wifi_retry_count) += 1;
+            int count = id(wifi_retry_count);
+            
+            ESP_LOGW("watchdog", "WiFi deconectat - Retry %d/5", count);
+            
+            char status[20];
+            sprintf(status, "Retry (%d/5)", count);
+            id(wifi_status_sensor).publish_state(status);
+            
+            // Dupa 5 incercari (5 minute) -> RESTART
+            if (count >= 5) {
+              ESP_LOGW("watchdog", "=== WIFI DECONECTAT 5 MINUTE! RESTART! ===");
+              App.safe_reboot();
+            }
+          }
+  
+  # Watchdog Modbus - Restart daca nu comunica
+  - interval: 60s
+    then:
+      - lambda: |-
+          unsigned long now = millis();
+          unsigned long last = id(last_modbus_update);
+          
+          // Daca Modbus nu a comunicat de 5 minute
+          if (last > 0 && (now - last) > 300000) {
+            ESP_LOGW("watchdog", "=== MODBUS BLOCAT DE 5 MINUTE! RESTART! ===");
+            ESP_LOGW("watchdog", "Last update was %.1f minutes ago", (now - last) / 60000.0);
+            App.safe_reboot();
+          }
+  
+  # Actualizare senzori virtuali - La fiecare 5 minute
+  - interval: 300s
+    then:
+      - lambda: |-
+          // === BATTERY DISCHARGE ===
+          float deye_batt_discharge = id(deye_batt_day_discharge).state;
+          float prev_batt_discharge = id(previous_deye_batt_discharge);
+          
+          if (!isnan(deye_batt_discharge)) {
+            if (deye_batt_discharge < prev_batt_discharge) {
+              // Deye s-a resetat la 00:00
+              ESP_LOGI("virtual", "Deye Battery Discharge reset detectat: %.2f -> %.2f", 
+                       prev_batt_discharge, deye_batt_discharge);
+              id(previous_deye_batt_discharge) = deye_batt_discharge;
+            } else {
+              // Calculează diferența
+              float diff = deye_batt_discharge - prev_batt_discharge;
+              if (diff > 0) {
+                id(virtual_daily_batt_discharge) += diff;
+                id(virtual_monthly_batt_discharge) += diff;
+                ESP_LOGD("virtual", "Batt Discharge +%.3f kWh (Daily: %.2f, Monthly: %.2f)", 
+                         diff, id(virtual_daily_batt_discharge), id(virtual_monthly_batt_discharge));
+              }
+              id(previous_deye_batt_discharge) = deye_batt_discharge;
+            }
+          }
+          
+          // === BATTERY CHARGE ===
+          float deye_batt_charge = id(deye_batt_day_charge).state;
+          float prev_batt_charge = id(previous_deye_batt_charge);
+          
+          if (!isnan(deye_batt_charge)) {
+            if (deye_batt_charge < prev_batt_charge) {
+              ESP_LOGI("virtual", "Deye Battery Charge reset detectat");
+              id(previous_deye_batt_charge) = deye_batt_charge;
+            } else {
+              float diff = deye_batt_charge - prev_batt_charge;
+              if (diff > 0) {
+                id(virtual_monthly_batt_charge) += diff;
+                ESP_LOGD("virtual", "Batt Charge +%.3f kWh (Monthly: %.2f)", 
+                         diff, id(virtual_monthly_batt_charge));
+              }
+              id(previous_deye_batt_charge) = deye_batt_charge;
+            }
+          }
+          
+          // === LOAD (CASA) ===
+          float deye_load = id(deye_load_day_energy).state;
+          float prev_load = id(previous_deye_load);
+          
+          if (!isnan(deye_load)) {
+            if (deye_load < prev_load) {
+              ESP_LOGI("virtual", "Deye Load reset detectat");
+              id(previous_deye_load) = deye_load;
+            } else {
+              float diff = deye_load - prev_load;
+              if (diff > 0) {
+                id(virtual_monthly_load) += diff;
+                ESP_LOGD("virtual", "Load +%.3f kWh (Monthly: %.2f)", 
+                         diff, id(virtual_monthly_load));
+              }
+              id(previous_deye_load) = deye_load;
+            }
+          }
+          
+          // === PV (PANOURI) - METODA SIMPLA ===
+          // NU facem nimic aici, se calculeaza dinamic in senzor!
+          
+          // === GRID IMPORT ===
+          float deye_grid = id(deye_grid_day_import).state;
+          float prev_grid = id(previous_deye_grid_import);
+          
+          if (!isnan(deye_grid)) {
+            if (deye_grid < prev_grid) {
+              ESP_LOGI("virtual", "Deye Grid Import reset detectat");
+              id(previous_deye_grid_import) = deye_grid;
+            } else {
+              float diff = deye_grid - prev_grid;
+              if (diff > 0) {
+                id(virtual_monthly_grid_import) += diff;
+                ESP_LOGD("virtual", "Grid Import +%.3f kWh (Monthly: %.2f)", 
+                         diff, id(virtual_monthly_grid_import));
+              }
+              id(previous_deye_grid_import) = deye_grid;
+            }
+          }
+
+button:
+  # Buton manual de restart
+  - platform: restart
+    name: "${device_type}_restart"
+    icon: "mdi:restart"
+  
+  # Buton RESETARE referință PV lunară la ZERO
+  - platform: template
+    name: "${device_type}_reset_pv_reference_to_zero"
+    icon: "mdi:numeric-0-box"
+    on_press:
+      - lambda: |-
+          id(month_start_pv_total) = 0.0;
+          ESP_LOGI("manual_reset", "Referință PV RESETATĂ LA ZERO!");
+  
+  # Buton SALVARE referință PV lunară (setează la valoarea curentă)
+  - platform: template
+    name: "${device_type}_save_pv_reference"
+    icon: "mdi:content-save"
+    on_press:
+      - lambda: |-
+          float total_pv = id(deye_pv_total_energy).state;
+          if (!isnan(total_pv)) {
+            id(month_start_pv_total) = total_pv;
+            ESP_LOGI("manual_reset", "Referință PV salvată: %.1f kWh", total_pv);
+          }
