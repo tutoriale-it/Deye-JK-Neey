@@ -1,1 +1,646 @@
+substitutions:
+  name: battery-1  # Nume device
+  friendly_name: Battery 1  # Nume baterie
+  device_description: "Battery 1"  # Descriere baterie
+  mac_address: AA:BB:CC:DD:EE:FF  # MAC JK BMS
+  protocol_version: JK02_32S
+  bms_name: "Battery 1"  # Nume BMS
+  mac_address_neey: AA:BB:CC:DD:EE:FF  # MAC NEEY
+  neey_name: "Battery 1"  # Nume NEEY
 
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+logger:
+  level: WARN
+
+api:
+  encryption:
+    key: "CHANGE_ME"  # API key
+  reboot_timeout: 0s
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  use_address: 0.0.0.0  # IP static
+  power_save_mode: none
+  fast_connect: on
+  manual_ip:
+    static_ip: 0.0.0.0  # IP static
+    gateway: 0.0.0.0  # Gateway
+    subnet: 255.255.255.0
+    dns1: 1.1.1.1
+
+web_server:
+  local: true
+  port: 80
+  version: 2
+  include_internal: false
+  auth:
+    username: !secret web_server_username
+    password: !secret web_server_password
+
+ota:
+  platform: esphome
+  password: !secret ota_password
+
+external_components:
+  - source: github://syssi/esphome-jk-bms@main
+    refresh: 5s
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+    timezone: Europe/Bucharest
+    on_time_sync:
+      then:
+        - logger.log: "Ora sincronizata cu Home Assistant"
+  
+  - platform: sntp
+    id: sntp_time
+    timezone: Europe/Bucharest
+    servers:
+      - time.google.com
+      - 0.pool.ntp.org
+      - 1.pool.ntp.org
+    on_time_sync:
+      then:
+        - logger.log: "Ora sincronizata cu SNTP (backup)"
+
+esp32_ble_tracker:
+  on_ble_advertise:
+    then:
+      - lambda: |-
+          if (x.get_name().rfind("JK-", 0) == 0) {
+            ESP_LOGI("ble_adv", "JK-BMS detectat: %s [%s]", x.get_name().c_str(), x.address_str().c_str());
+          }
+          if (x.get_name().rfind("GW-", 0) == 0) {
+            ESP_LOGI("ble_adv", "NEEY detectat: %s [%s]", x.get_name().c_str(), x.address_str().c_str());
+          }
+
+ble_client:
+  - mac_address: ${mac_address}
+    id: client0
+  - mac_address: ${mac_address_neey}
+    id: client_neey
+
+jk_bms_ble:
+  - ble_client_id: client0
+    protocol_version: ${protocol_version}
+    throttle: 30s
+    id: bms0
+
+heltec_balancer_ble:
+  - ble_client_id: client_neey
+    throttle: 10s
+    id: balancer_neey
+
+globals:
+  - id: wifi_retry_count
+    type: int
+    restore_value: no
+    initial_value: '0'
+  
+  - id: last_ble_update
+    type: unsigned long
+    restore_value: no
+    initial_value: '0'
+  
+  - id: last_neey_update
+    type: unsigned long
+    restore_value: no
+    initial_value: '0'
+
+binary_sensor:
+  - platform: template
+    name: "wifi connected"
+    id: wifi_connected
+    device_class: connectivity
+    entity_category: diagnostic
+    lambda: |-
+      return wifi::global_wifi_component->is_connected();
+  
+  - platform: template
+    name: "${bms_name} jk ble alive"
+    id: ble_alive
+    device_class: connectivity
+    entity_category: diagnostic
+    lambda: |-
+      unsigned long now = millis();
+      unsigned long last = id(last_ble_update);
+      
+      bool voltage_valid = !isnan(id(batt_voltage).state);
+      bool current_valid = !isnan(id(batt_current).state);
+      bool soc_valid = !isnan(id(batt_soc).state);
+      
+      int valid_count = (voltage_valid ? 1 : 0) + (current_valid ? 1 : 0) + (soc_valid ? 1 : 0);
+      
+      if (valid_count >= 2) {
+        id(last_ble_update) = now;
+        return true;
+      }
+      
+      if (last > 0 && (now - last) > 300000) {
+        ESP_LOGW("watchdog", "${bms_name} JK BLE NU COMUNICA de 5 minute!");
+        return false;
+      }
+      
+      return (last > 0);
+  
+  - platform: jk_bms_ble
+    jk_bms_ble_id: bms0
+    balancing:
+      name: "${bms_name} jk balancing"
+    charging:
+      name: "${bms_name} jk charging"
+    discharging:
+      name: "${bms_name} jk discharging"
+    online_status:
+      name: "${bms_name} jk online status"
+  
+  - platform: template
+    name: "${neey_name} neey ble alive"
+    id: neey_alive
+    device_class: connectivity
+    entity_category: diagnostic
+    lambda: |-
+      unsigned long now = millis();
+      unsigned long last = id(last_neey_update);
+      
+      bool voltage_valid = !isnan(id(neey_avg_voltage).state);
+      
+      if (voltage_valid) {
+        id(last_neey_update) = now;
+        return true;
+      }
+      
+      if (last > 0 && (now - last) > 300000) {
+        ESP_LOGW("watchdog", "${neey_name} NEEY BLE NU COMUNICA de 5 minute!");
+        return false;
+      }
+      
+      return (last > 0);
+  
+  - platform: heltec_balancer_ble
+    heltec_balancer_ble_id: balancer_neey
+    balancing:
+      name: "${neey_name} neey balancing"
+    online_status:
+      name: "${neey_name} neey online status"
+
+sensor:
+  - platform: wifi_signal
+    name: "wifi signal db"
+    id: wifi_signal_db
+    update_interval: 60s
+    entity_category: diagnostic
+    internal: true
+  
+  - platform: template
+    name: "wifi signal percent"
+    unit_of_measurement: "%"
+    icon: "mdi:wifi"
+    update_interval: 60s
+    accuracy_decimals: 0
+    entity_category: diagnostic
+    lambda: |-
+      float dbm = id(wifi_signal_db).state;
+      if (isnan(dbm)) return 0;
+      if (dbm <= -100) return 0;
+      if (dbm >= -50) return 100;
+      return 2 * (dbm + 100);
+  
+  - platform: jk_bms_ble
+    jk_bms_ble_id: bms0
+    
+    min_cell_voltage:
+      name: "${bms_name} jk min cell voltage"
+    max_cell_voltage:
+      name: "${bms_name} jk max cell voltage"
+    min_voltage_cell:
+      name: "${bms_name} jk min voltage cell"
+    max_voltage_cell:
+      name: "${bms_name} jk max voltage cell"
+    delta_cell_voltage:
+      name: "${bms_name} jk delta cell voltage"
+    average_cell_voltage:
+      name: "${bms_name} jk average cell voltage"
+    
+    cell_voltage_1:
+      name: "${bms_name} jk cell 1"
+    cell_voltage_2:
+      name: "${bms_name} jk cell 2"
+    cell_voltage_3:
+      name: "${bms_name} jk cell 3"
+    cell_voltage_4:
+      name: "${bms_name} jk cell 4"
+    cell_voltage_5:
+      name: "${bms_name} jk cell 5"
+    cell_voltage_6:
+      name: "${bms_name} jk cell 6"
+    cell_voltage_7:
+      name: "${bms_name} jk cell 7"
+    cell_voltage_8:
+      name: "${bms_name} jk cell 8"
+    cell_voltage_9:
+      name: "${bms_name} jk cell 9"
+    cell_voltage_10:
+      name: "${bms_name} jk cell 10"
+    cell_voltage_11:
+      name: "${bms_name} jk cell 11"
+    cell_voltage_12:
+      name: "${bms_name} jk cell 12"
+    cell_voltage_13:
+      name: "${bms_name} jk cell 13"
+    cell_voltage_14:
+      name: "${bms_name} jk cell 14"
+    cell_voltage_15:
+      name: "${bms_name} jk cell 15"
+    cell_voltage_16:
+      name: "${bms_name} jk cell 16"
+    
+    total_voltage:
+      name: "${bms_name} jk total voltage"
+      id: batt_voltage
+    current:
+      name: "${bms_name} jk current"
+      id: batt_current
+    power:
+      name: "${bms_name} jk power"
+    charging_power:
+      name: "${bms_name} jk charging power"
+    discharging_power:
+      name: "${bms_name} jk discharging power"
+    
+    temperature_sensor_1:
+      name: "${bms_name} jk temperature 1"
+    temperature_sensor_2:
+      name: "${bms_name} jk temperature 2"
+    
+    state_of_charge:
+      name: "${bms_name} jk SOC"
+      id: batt_soc
+    capacity_remaining:
+      name: "${bms_name} jk capacity remaining"
+    total_battery_capacity_setting:
+      name: "${bms_name} jk total battery capacity"
+    charging_cycles:
+      name: "${bms_name} jk charging cycles"
+    balancing_current:
+      name: "${bms_name} jk balancing current"
+  
+  - platform: heltec_balancer_ble
+    heltec_balancer_ble_id: balancer_neey
+    
+    average_cell_voltage:
+      name: "${neey_name} neey average cell voltage"
+      id: neey_avg_voltage
+    delta_cell_voltage:
+      name: "${neey_name} neey delta cell voltage"
+    
+    cell_voltage_1:
+      name: "${neey_name} neey cell 1"
+      id: neey_cell_1
+    cell_voltage_2:
+      name: "${neey_name} neey cell 2"
+      id: neey_cell_2
+    cell_voltage_3:
+      name: "${neey_name} neey cell 3"
+      id: neey_cell_3
+    cell_voltage_4:
+      name: "${neey_name} neey cell 4"
+      id: neey_cell_4
+    cell_voltage_5:
+      name: "${neey_name} neey cell 5"
+      id: neey_cell_5
+    cell_voltage_6:
+      name: "${neey_name} neey cell 6"
+      id: neey_cell_6
+    cell_voltage_7:
+      name: "${neey_name} neey cell 7"
+      id: neey_cell_7
+    cell_voltage_8:
+      name: "${neey_name} neey cell 8"
+      id: neey_cell_8
+    cell_voltage_9:
+      name: "${neey_name} neey cell 9"
+      id: neey_cell_9
+    cell_voltage_10:
+      name: "${neey_name} neey cell 10"
+      id: neey_cell_10
+    cell_voltage_11:
+      name: "${neey_name} neey cell 11"
+      id: neey_cell_11
+    cell_voltage_12:
+      name: "${neey_name} neey cell 12"
+      id: neey_cell_12
+    cell_voltage_13:
+      name: "${neey_name} neey cell 13"
+      id: neey_cell_13
+    cell_voltage_14:
+      name: "${neey_name} neey cell 14"
+      id: neey_cell_14
+    cell_voltage_15:
+      name: "${neey_name} neey cell 15"
+      id: neey_cell_15
+    cell_voltage_16:
+      name: "${neey_name} neey cell 16"
+      id: neey_cell_16
+    
+    total_runtime:
+      name: "${neey_name} neey total runtime"
+  
+  - platform: template
+    name: "${neey_name} neey max cell voltage"
+    unit_of_measurement: "V"
+    device_class: voltage
+    accuracy_decimals: 3
+    icon: "mdi:battery-arrow-up"
+    update_interval: 10s
+    lambda: |-
+      float cells[] = {
+        id(neey_cell_1).state, id(neey_cell_2).state, id(neey_cell_3).state, id(neey_cell_4).state,
+        id(neey_cell_5).state, id(neey_cell_6).state, id(neey_cell_7).state, id(neey_cell_8).state,
+        id(neey_cell_9).state, id(neey_cell_10).state, id(neey_cell_11).state, id(neey_cell_12).state,
+        id(neey_cell_13).state, id(neey_cell_14).state, id(neey_cell_15).state, id(neey_cell_16).state
+      };
+      
+      float max_v = 0.0;
+      for (int i = 0; i < 16; i++) {
+        if (!isnan(cells[i]) && cells[i] > max_v) {
+          max_v = cells[i];
+        }
+      }
+      return max_v;
+  
+  - platform: template
+    name: "${neey_name} neey min cell voltage"
+    unit_of_measurement: "V"
+    device_class: voltage
+    accuracy_decimals: 3
+    icon: "mdi:battery-arrow-down"
+    update_interval: 10s
+    lambda: |-
+      float cells[] = {
+        id(neey_cell_1).state, id(neey_cell_2).state, id(neey_cell_3).state, id(neey_cell_4).state,
+        id(neey_cell_5).state, id(neey_cell_6).state, id(neey_cell_7).state, id(neey_cell_8).state,
+        id(neey_cell_9).state, id(neey_cell_10).state, id(neey_cell_11).state, id(neey_cell_12).state,
+        id(neey_cell_13).state, id(neey_cell_14).state, id(neey_cell_15).state, id(neey_cell_16).state
+      };
+      
+      float min_v = 999.0;
+      for (int i = 0; i < 16; i++) {
+        if (!isnan(cells[i]) && cells[i] < min_v) {
+          min_v = cells[i];
+        }
+      }
+      return (min_v == 999.0) ? 0.0 : min_v;
+  
+  - platform: template
+    name: "${neey_name} neey cell count"
+    icon: "mdi:counter"
+    accuracy_decimals: 0
+    update_interval: 60s
+    lambda: |-
+      float cells[] = {
+        id(neey_cell_1).state, id(neey_cell_2).state, id(neey_cell_3).state, id(neey_cell_4).state,
+        id(neey_cell_5).state, id(neey_cell_6).state, id(neey_cell_7).state, id(neey_cell_8).state,
+        id(neey_cell_9).state, id(neey_cell_10).state, id(neey_cell_11).state, id(neey_cell_12).state,
+        id(neey_cell_13).state, id(neey_cell_14).state, id(neey_cell_15).state, id(neey_cell_16).state
+      };
+      
+      int count = 0;
+      for (int i = 0; i < 16; i++) {
+        if (!isnan(cells[i]) && cells[i] > 0.1) {
+          count++;
+        }
+      }
+      return count;
+
+text_sensor:
+  - platform: template
+    name: "wifi status"
+    id: wifi_status_sensor
+    icon: "mdi:wifi"
+    update_interval: 60s
+    entity_category: diagnostic
+    lambda: |-
+      if (wifi::global_wifi_component->is_connected()) {
+        return {"WiFi OK"};
+      } else {
+        int count = id(wifi_retry_count);
+        char status[20];
+        sprintf(status, "Retry (%d/5)", count);
+        return {(std::string)status};
+      }
+  
+  - platform: template
+    name: "esp time"
+    icon: "mdi:clock-outline"
+    update_interval: 1s
+    entity_category: diagnostic
+    lambda: |-
+      char time_str[20];
+      auto time = id(homeassistant_time).now();
+      if (time.is_valid()) {
+        sprintf(time_str, "%02d:%02d %02d.%02d.%04d", 
+                time.hour, time.minute,
+                time.day_of_month, time.month, time.year);
+        return {(std::string)time_str};
+      }
+      return {"N/A"};
+
+  - platform: heltec_balancer_ble
+    heltec_balancer_ble_id: balancer_neey
+    operation_status:
+      name: "${neey_name} neey operation status"
+    total_runtime_formatted:
+      name: "${neey_name} neey total runtime formatted"
+    battery_type:
+      name: "${neey_name} neey battery type"
+  
+  - platform: template
+    name: "${neey_name} neey max cell number"
+    icon: "mdi:battery-arrow-up"
+    update_interval: 10s
+    lambda: |-
+      float cells[] = {
+        id(neey_cell_1).state, id(neey_cell_2).state, id(neey_cell_3).state, id(neey_cell_4).state,
+        id(neey_cell_5).state, id(neey_cell_6).state, id(neey_cell_7).state, id(neey_cell_8).state,
+        id(neey_cell_9).state, id(neey_cell_10).state, id(neey_cell_11).state, id(neey_cell_12).state,
+        id(neey_cell_13).state, id(neey_cell_14).state, id(neey_cell_15).state, id(neey_cell_16).state
+      };
+      
+      float max_v = 0.0;
+      int max_cell = 0;
+      for (int i = 0; i < 16; i++) {
+        if (!isnan(cells[i]) && cells[i] > max_v) {
+          max_v = cells[i];
+          max_cell = i + 1;
+        }
+      }
+      
+      if (max_cell > 0) {
+        char result[20];
+        sprintf(result, "Cell %d", max_cell);
+        return {(std::string)result};
+      }
+      return {"N/A"};
+  
+  - platform: template
+    name: "${neey_name} neey min cell number"
+    icon: "mdi:battery-arrow-down"
+    update_interval: 10s
+    lambda: |-
+      float cells[] = {
+        id(neey_cell_1).state, id(neey_cell_2).state, id(neey_cell_3).state, id(neey_cell_4).state,
+        id(neey_cell_5).state, id(neey_cell_6).state, id(neey_cell_7).state, id(neey_cell_8).state,
+        id(neey_cell_9).state, id(neey_cell_10).state, id(neey_cell_11).state, id(neey_cell_12).state,
+        id(neey_cell_13).state, id(neey_cell_14).state, id(neey_cell_15).state, id(neey_cell_16).state
+      };
+      
+      float min_v = 999.0;
+      int min_cell = 0;
+      for (int i = 0; i < 16; i++) {
+        if (!isnan(cells[i]) && cells[i] < min_v) {
+          min_v = cells[i];
+          min_cell = i + 1;
+        }
+      }
+      
+      if (min_cell > 0) {
+        char result[20];
+        sprintf(result, "Cell %d", min_cell);
+        return {(std::string)result};
+      }
+      return {"N/A"};
+
+switch:
+  - platform: jk_bms_ble
+    jk_bms_ble_id: bms0
+    charging:
+      name: "${bms_name} jk charging"
+    discharging:
+      name: "${bms_name} jk discharging"
+    balancer:
+      name: "${bms_name} jk balancer"
+  
+  - platform: ble_client
+    ble_client_id: client0
+    name: "${bms_name} jk BLE connection"
+  
+  - platform: ble_client
+    ble_client_id: client_neey
+    name: "${neey_name} neey BLE connection"
+
+number:
+  - platform: jk_bms_ble
+    jk_bms_ble_id: bms0
+    
+    max_charge_current:
+      name: "${bms_name} jk max charge current"
+      mode: box
+    max_discharge_current:
+      name: "${bms_name} jk max discharge current"
+      mode: box
+    balance_trigger_voltage:
+      name: "${bms_name} jk balance trigger voltage"
+      mode: box
+    balance_starting_voltage:
+      name: "${bms_name} jk balance starting voltage"
+      mode: box
+    cell_voltage_overvoltage_protection:
+      name: "${bms_name} jk overvoltage protection"
+      mode: box
+    cell_voltage_undervoltage_protection:
+      name: "${bms_name} jk undervoltage protection"
+      mode: box
+    power_off_voltage:
+      name: "${bms_name} jk power off voltage"
+      mode: box
+  
+  - platform: heltec_balancer_ble
+    heltec_balancer_ble_id: balancer_neey
+    balance_trigger_voltage:
+      name: "${neey_name} neey balance trigger voltage"
+      mode: box
+    balance_start_voltage:
+      name: "${neey_name} neey balance start voltage"
+      mode: box
+    balance_sleep_voltage:
+      name: "${neey_name} neey balance sleep voltage"
+      mode: box
+
+interval:
+  - interval: 60s
+    then:
+      - lambda: |-
+          bool wifi_ok = wifi::global_wifi_component->is_connected();
+          
+          if (wifi_ok) {
+            if (id(wifi_retry_count) != 0) {
+              ESP_LOGI("watchdog", "WiFi reconectat!");
+            }
+            id(wifi_retry_count) = 0;
+          } else {
+            id(wifi_retry_count) += 1;
+            int count = id(wifi_retry_count);
+            ESP_LOGW("watchdog", "WiFi deconectat - Retry %d/5", count);
+            if (count >= 5) {
+              ESP_LOGW("watchdog", "=== WIFI DECONECTAT 5 MINUTE! RESTART! ===");
+              App.safe_reboot();
+            }
+          }
+  
+  - interval: 60s
+    then:
+      - lambda: |-
+          unsigned long now = millis();
+          unsigned long last = id(last_ble_update);
+          if (last > 0 && (now - last) > 300000) {
+            ESP_LOGW("watchdog", "=== ${bms_name} JK BLE BLOCAT 5 MIN! RESTART! ===");
+            App.safe_reboot();
+          }
+  
+  - interval: 60s
+    then:
+      - lambda: |-
+          unsigned long now = millis();
+          unsigned long last = id(last_neey_update);
+          if (last > 0 && (now - last) > 300000) {
+            ESP_LOGW("watchdog", "=== ${neey_name} NEEY BLE BLOCAT 5 MIN! RESTART! ===");
+            App.safe_reboot();
+          }
+  
+  - interval: 5min
+    then:
+      - button.press: retrieve_settings_jk
+      - button.press: retrieve_settings_neey
+
+button:
+  - platform: restart
+    name: "restart"
+    icon: "mdi:restart"
+    entity_category: diagnostic
+  
+  - platform: jk_bms_ble
+    jk_bms_ble_id: bms0
+    retrieve_settings:
+      name: "${bms_name} jk retrieve settings"
+      id: retrieve_settings_jk
+    retrieve_device_info:
+      name: "${bms_name} jk retrieve device info"
+  
+  - platform: heltec_balancer_ble
+    heltec_balancer_ble_id: balancer_neey
+    retrieve_settings:
+      name: "${neey_name} neey retrieve settings"
+      id: retrieve_settings_neey
+    retrieve_device_info:
+      name: "${neey_name} neey retrieve device info"
