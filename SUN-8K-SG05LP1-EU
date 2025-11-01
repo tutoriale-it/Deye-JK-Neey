@@ -23,19 +23,19 @@ logger:
 ##############################################################
 api:
   encryption:
-    key: "CHANGE-ME"
+    key: "CHANGE-ME"  # Pune key-ul tau de encryption generat de ESPHome
   reboot_timeout: 0s
 
 ##############################################################
 wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
-  use_address: 10.10.9.230
+  ssid: !secret wifi_ssid  # Defineste in secrets.yaml
+  password: !secret wifi_password  # Defineste in secrets.yaml
+  use_address: 0.0.0.0  # Seteaza IP-ul static al ESP-ului tau
   power_save_mode: none
   fast_connect: on
   manual_ip:
-    static_ip: 0.0.0.0
-    gateway: 0.0.0.0
+    static_ip: 0.0.0.0  # Seteaza IP-ul static al ESP-ului tau (acelasi ca use_address)
+    gateway: 0.0.0.0  # Seteaza gateway-ul retelei tale (de obicei IP-ul routerului)
     subnet: 255.255.255.0
     dns1: 1.1.1.1
 
