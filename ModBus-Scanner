@@ -1,41 +1,36 @@
 substitutions:
-  name: invertor_deye
+  name: scanner_deye  # Accepta doar litere mici, fara spatii
   device_description: "ESPHome - Deye - Config"
   modbus_controller_id: deye_8k
   device_type: deye
-  inverter_model: "SUN-8K-SG05LP1-EU"
-
+  inverter_model: "SUN-8K-SG05LP1-EU"  # Schimba cu modelul tau de invertor
 ##############################################################
 esphome:
   name: ${name}
   friendly_name: ${name}
-
 ##############################################################
 esp32:
   board: esp32dev
   framework:
     type: esp-idf
-
 ##############################################################
 logger:
   level: WARN
-
 ##############################################################
 api:
   encryption:
-    key: "6/PC0DgEywdt9rFPgenfyiPfMdW4BUF0rwRAT3rjMjY="
+    key: "CHANGE_ME"  # Pune key-ul tau de encryption generat de ESPHome
   reboot_timeout: 0s
-
 ##############################################################
 wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
-  use_address: 10.10.9.230
+  ssid: !secret wifi_ssid  # Defineste in secrets.yaml
+  password: !secret wifi_password  # Defineste in secrets.yaml
+  use_address: 0.0.0.0  # Seteaza IP-ul static al ESP-ului tau
   power_save_mode: none
   fast_connect: on
   manual_ip:
-    static_ip: 10.10.9.230
-    gateway: 10.10.9.254
+    static_ip: 0.0.0.0  # Seteaza IP-ul static al ESP-ului tau (acelasi ca use_address)
+    gateway: 0.0.0.0  # Seteaza gateway-ul retelei tale (de obicei IP-ul routerului)
     subnet: 255.255.255.0
     dns1: 1.1.1.1
 
