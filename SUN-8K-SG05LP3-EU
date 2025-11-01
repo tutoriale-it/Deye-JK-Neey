@@ -21,8 +21,8 @@ api:
     key: "CHANGE_ME"  # Pune key-ul tau de encryption generat de ESPHome
 
 ota:
-  - platform: esphome
-    password: "e2ef5de1765616682170bf7a2997449f9f2c494"
+  - platform: CHANGE_ME  # Pune userul ta
+    password: "CHANGE_ME"  # Pune parola ta
 
 wifi:
   ssid: !secret "wifi_ssid_deye_esp"
