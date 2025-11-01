@@ -18,7 +18,7 @@ logger:
 # Enable Home Assistant API
 api:
   encryption:
-    key: "oorr+TMC445CCAfWp7uKutucm2325qbM08qx8676R4Lb3hIFVH0080eM="
+    key: "CHANGE_ME"  # Pune key-ul tau de encryption generat de ESPHome
 
 ota:
   - platform: esphome
@@ -27,7 +27,7 @@ ota:
 wifi:
   ssid: !secret "wifi_ssid_deye_esp"
   password: !secret "wifi_password_deye_esp"
-  use_address: 192.168.68.126
+  use_address: 0.0.0.0  # Seteaza IP-ul static al ESP-ului tau
   # power_save_mode: HIGH
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
