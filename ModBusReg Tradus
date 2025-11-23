@@ -1,1 +1,207 @@
+# Registre Modbus RTU - Invertor Hibrid Deye
 
+## Zona Atribute Fixe (000-019)
+
+| Adresă | Nume Registru | R/W | Interval | Unitate | Detalii |
+|--------|---------------|-----|----------|---------|---------|
+| 000 | Tip dispozitiv | R | - | - | 0x0200=string, 0x0300=stocare monofazat LV, 0x0400=micro, 0x0500=stocare trifazat LV, 0x0600=stocare trifazat HV |
+| 001 | Adresă Modbus | R | 1-247 | - | - |
+| 002 | Versiune protocol | R | - | - | Ex: 0x0102 = v1.2 |
+| 003-007 | Număr serial | R | ASCII | - | 10 caractere (5 registre x 2 bytes) |
+| 008 | Putere nominală | R | - | - | 2=monofazat, 3=trifazat, 8=stocare monofazat |
+| 013 | Versiune firmware control | R | - | - | - |
+| 015 | Tip standard siguranță | R | - | - | <3=baterie 48V, =3=baterie 24V |
+| 016-017 | Putere nominală | R | - | 0.1W | Octet jos + înalt |
+| 018 | Număr MPPT și faze | R | 1-8/1-3 | - | Ex: 0x0503 = 5 MPPT trifazat |
+| 019 | Nivel tensiune rețea | R/W | 0-3 | - | 0=127/220V, 1=220/380V |
+
+## Zona Atribute Variabile (020-058)
+
+| Adresă | Nume Registru | R/W | Interval | Unitate | Detalii |
+|--------|---------------|-----|----------|---------|---------|
+| 020 | Enable blocare distanță | R/W | - | - | 0x0002=închis, 0x0000=deschis |
+| 021 | Timp autotest pornire | R/W | 0-1000 | S | - |
+| 022-024 | Timp sistem | R/W | - | - | An/Lună/Zi/Oră/Min/Sec (3 registre) |
+| 027 | Limită sup tensiune rețea | R/W | 1600-5500 | 0.1V | - |
+| 029 | Limită sup frecvență rețea | R/W | 4500-6500 | 0.01Hz | - |
+| 030 | Limită inf frecvență rețea | R/W | 4500-6500 | 0.01Hz | - |
+| 043 | Enable pornire/oprire | R/W | 0-1 | - | 0=oprire, 1=pornire, 2=oprire |
+| 051 | Standard rețea | R/W | 0-20 | - | 1=INMETRO, 2=EN50549, 6=VDE, 9=CEI_0_21, etc |
+
+## Zona Date Rulare Timp Real (059-124)
+
+| Adresă | Nume Registru | R/W | Interval | Unitate | Detalii |
+|--------|---------------|-----|----------|---------|---------|
+| 059 | Stare rulare | R | 0-5 | - | 0=așteptare, 1=autotest, 2=normal, 3=alarmă, 4=eroare |
+| 060 | Energie activă zilnic | R | -32768 la 32767 | 0.1kWh | Integer cu semn |
+| 063-064 | Total energie activă | R | - | 0.1kWh | Octet jos + înalt |
+| 073 | Tensiune rețea A | R | 0-9999 | 0.1V | - |
+| 076 | Curent rețea A | R | 0-65535 | 0.1A | - |
+| 079 | Frecvență rețea | R | 0-9999 | 0.01Hz | - |
+| 086-087 | Putere activă ieșire | R | - | 0.1W | Octet jos + înalt |
+| 090 | Temperatură radiator | R | 0-3000 | 0.1°C | - |
+| 091 | Temperatură IGBT | R | 0-3000 | 0.1°C | -56.2°C=438, 0°C=1000 |
+| 101-102 | Mesaj alarmă | R | - | - | Cuvinte 1-2 |
+| 103-106 | Mesaj eroare | R | - | - | Cuvinte 1-4 |
+| 109 | Tensiune DC 1 | R | 0-65535 | 0.1V | - |
+| 110 | Curent DC 1 | R | 0-65535 | 0.1A | - |
+| 111 | Tensiune DC 2 | R | 0-65535 | 0.1V | - |
+| 112 | Curent DC 2 | R | 0-65535 | 0.1A | - |
+
+## Zonă Hibrid/Stocare (150-197)
+
+| Adresă | Nume Registru | R/W | Interval | Unitate | Detalii |
+|--------|---------------|-----|----------|---------|---------|
+| 150 | Tensiune rețea L1-N | R | - | 0.1V | - |
+| 151 | Tensiune rețea L2-N | R | - | 0.1V | - |
+| 160 | Curent rețea L1 | R | - | 0.01A | Integer cu semn |
+| 161 | Curent rețea L2 | R | - | 0.01A | Integer cu semn |
+| 167 | Putere rețea L1 | R | - | 1W sau 10W | Integer cu semn (vezi reg 054) |
+| 169 | Putere rețea total | R | - | 1W sau 10W | >0=cumpărare, <0=vânzare |
+| 176 | Putere sarcină L1 | R | - | 1W sau 10W | Integer cu semn |
+| 178 | Putere totală sarcină | R | - | 1W sau 10W | Integer cu semn |
+| 182 | Temperatură baterie | R | 0-3000 | 0.1°C | Offset +1000 (1200=20°C) |
+| 183 | Tensiune baterie | R | - | 0.01V | Ex: 4100=41.0V |
+| 184 | Capacitate baterie SOC | R | 0-100 | 1% | - |
+| 186-189 | Putere PV1-4 | R | - | 1W | - |
+| 190 | Putere baterie | R | - | 1W | Integer cu semn |
+| 191 | Curent baterie | R | - | 0.01A | Integer cu semn |
+
+## Zonă Setări Baterie (200-243)
+
+| Adresă | Nume Registru | R/W | Interval | Unitate | Detalii |
+|--------|---------------|-----|----------|---------|---------|
+| 200 | Tip încărcare baterie | R/W | - | - | 0x0000=plumb 4 etape, 0x0001=litiu |
+| 201 | Tensiune echilibrare | R/W | 3800-6100 | 0.01V | Ex: 1480=14.8V |
+| 202 | Tensiune absorbție | R/W | 3800-6100 | 0.01V | Ex: 1440=14.4V |
+| 203 | Tensiune flotare | R/W | 3800-6100 | 0.01V | - |
+| 204 | Capacitate baterie | R/W | 0-2000 | 1Ah | Ex: 200=200AH |
+| 210 | Curent max încărcare | R/W | 0-185 | 1A | - |
+| 211 | Curent max descărcare | R/W | 0-185 | 1A | - |
+| 220 | Tensiune oprire baterie | R/W | 3800-6100 | 0.01V | Protecție jos |
+| 221 | Tensiune repornire | R/W | 3800-6100 | 0.01V | Recuperare |
+| 222 | Tensiune nivel jos | R/W | 3800-6100 | 0.01V | Adâncime descărcare |
+| 231 | Enable încărcare generator | R/W | - | - | - |
+| 232 | Enable încărcare rețea | R/W | - | - | - |
+| 243 | Model management energie | R/W | - | - | 0=prioritate baterie, 1=prioritate sarcină |
+
+## Zonă Time of Use (248-279)
+
+| Adresă | Nume Registru | R/W | Interval | Unitate | Detalii |
+|--------|---------------|-----|----------|---------|---------|
+| 248 | Enable TOU Selling | R/W | - | - | Bit0: 0=dezactivat, 1=activat; Bit1-7: Luni-Duminică |
+| 250-255 | Timp 1-6 mod vânzare | R/W | 0-2359 | - | Ex: 2359=23:59 |
+| 256-261 | Putere 1-6 mod vânzare | R/W | 0-8000 | 1W | - |
+| 262-267 | Tensiune 1-6 mod vânzare | R/W | 0-6300 | 0.01V | - |
+| 268-273 | Capacitate 1-6 | R/W | 0-100 | 1% | SOC |
+| 274-279 | Enable încărcare 1-6 | R/W | 0-1 | - | Bit0: rețea, Bit1: generator |
+
+## Zonă Setări Rețea (280-293)
+
+| Adresă | Nume Registru | R/W | Interval | Unitate | Detalii |
+|--------|---------------|-----|----------|---------|---------|
+| 284 | Mod rețea | R/W | 0-1 | - | 0=standard general, 1=UL1741, 2=CPUC_RULE21, etc |
+| 285 | Frecvență rețea | R/W | 0-1 | - | 0=50Hz, 1=60Hz |
+| 286 | Tip rețea | R/W | 0-3 | - | 0=monofazat, 1=bifazat 120/240V, 2=trifazat 208V |
+| 287 | Protecție tensiune înaltă | R/W | 1800-2700 | 0.1V | - |
+| 288 | Protecție tensiune joasă | R/W | 1800-2700 | 0.1V | - |
+| 289 | Protecție frecvență înaltă | R/W | 4500-6500 | 0.01Hz | - |
+| 290 | Protecție frecvență joasă | R/W | 4500-6500 | 0.01Hz | - |
+| 292 | Putere GEN peak shaving | R/W | 0-16000 | 1W | - |
+| 293 | Putere GRID peak shaving | R/W | 0-16000 | 1W | - |
+
+## Zonă Baterie Litiu (312-325)
+
+| Adresă | Nume Registru | R/W | Interval | Unitate | Detalii |
+|--------|---------------|-----|----------|---------|---------|
+| 312 | Tensiune încărcare BMS | R/W | - | 0.01V | - |
+| 313 | Tensiune descărcare BMS | R/W | - | 0.01V | - |
+| 314 | Limită curent încărcare BMS | R/W | - | 1A | - |
+| 315 | Limită curent descărcare BMS | R/W | - | 1A | - |
+| 316 | Capacitate timp real BMS | R/W | - | 1% | - |
+| 317 | Tensiune timp real BMS | R/W | - | 0.01V | - |
+| 318 | Curent timp real BMS | R/W | - | 1A | - |
+| 319 | Temperatură timp real BMS | R/W | - | 0.1°C | Offset +1000 |
+| 322 | Alarmă baterie litiu | R/W | - | - | - |
+| 323 | Eroare baterie litiu | R/W | 0-65535 | - | - |
+| 325 | Tip baterie litiu | R/W | - | - | 0=PYLON/SOLAX, 1=Tianbangda RS485, 5=Pylon 485, etc |
+
+## Zonă Calibrare (376-389)
+
+| Adresă | Nume Registru | R/W | Unitate | Detalii |
+|--------|---------------|-----|---------|---------|
+| 376 | Grid1_I calibrare | R/W | - | - |
+| 377 | Grid2_I calibrare | R/W | - | - |
+| 378 | Grid_V_L1 calibrare | R/W | - | - |
+| 379 | Grid_V_L2 calibrare | R/W | - | - |
+| 382 | PV1_V calibrare | R/W | - | - |
+| 383 | PV1_I calibrare | R/W | - | - |
+| 384 | PV2_V calibrare | R/W | - | - |
+| 385 | PV2_I calibrare | R/W | - | - |
+| 388 | BAT_I calibrare | R/W | - | - |
+| 389 | BAT_V calibrare | R/W | - | - |
+
+## Zonă Reconectare (433-436)
+
+| Adresă | Nume Registru | R/W | Interval | Unitate | Detalii |
+|--------|---------------|-----|----------|---------|---------|
+| 433 | Reconectare tensiune înaltă | R/W | 1800-2700 | 0.1V | Grid V High Reconnect |
+| 434 | Reconectare tensiune joasă | R/W | 1800-2700 | 0.1V | Grid V Low Reconnect |
+| 435 | Reconectare frecvență înaltă | R/W | 4500-6500 | 0.01Hz | Grid Hz High Reconnect |
+| 436 | Reconectare frecvență joasă | R/W | 4500-6500 | 0.01Hz | Grid Hz Low Reconnect |
+
+## Protocol Baterie Deye (10000-10031)
+
+| Adresă | Nume Registru | R/W | Unitate | Detalii |
+|--------|---------------|-----|---------|---------|
+| 10000 | Tip dispozitiv baterie | R | - | 0x700: Protocol Pack litiu |
+| 10003 | Tensiune baterie | R | 0.1V | - |
+| 10004 | Curent baterie | R | 0.1A | - |
+| 10005 | SOC baterie | R | 1% | - |
+| 10006 | SOH baterie | R | 1% | - |
+| 10007 | Capacitate rămasă | R | 1Ah | - |
+| 10008 | Temperatură baterie | R | 0.1°C | - |
+| 10009 | Tensiune încărcare | R | 0.1V | - |
+| 10010 | Tensiune descărcare | R | 0.1V | - |
+| 10013 | Limită curent încărcare | R | 1A | - |
+| 10014 | Limită curent descărcare | R | 1A | - |
+| 10019 | Eroare baterie 1 | R | - | - |
+| 10020 | Eroare baterie 2 | R | - | - |
+| 10021 | Alarmă baterie 1 | R | - | - |
+| 10022 | Alarmă baterie 2 | R | - | - |
+
+## Pack-uri Baterie (10032+)
+
+Fiecare Pack: 38 registre (8 SN + 30 date)
+
+**Pack 1:** 10032-10069  
+**Pack 2:** 10070-10107  
+**Pack 3:** 10108-10145  
+...și așa mai departe
+
+### Date per Pack (exemplu Pack 1: 10040-10069)
+
+| Offset | Nume | Unitate |
+|--------|------|---------|
+| +0 | Tensiune modul | 0.1V |
+| +1 | Curent modul | 0.1A |
+| +2 | Temperatură medie | offset +1000°C |
+| +7 | SOC | 0.1% |
+| +9 | Capacitate rămasă | 0.1Ah |
+| +11 | Tensiune încărcare | 0.01V |
+| +13 | Curent încărcare | 0.1A |
+| +15 | Tensiune celulă max | 0.01V |
+| +16 | Tensiune celulă min | 0.01V |
+| +17 | Număr cicluri | 1 |
+| +19 | Avertizare 1 | - |
+| +21 | Eroare 1 | - |
+
+## Protocol Modbus
+
+**Cod funcție 0x03:** Citire registru  
+**Cod funcție 0x10:** Scriere registru
+
+**Parametri:**
+- Rată: 9600 bps
+- Format: 8N1
+- Interfață: RS485/RS232
