@@ -1,207 +1,431 @@
-# Registre Modbus RTU - Invertor Hibrid Deye
+REGISTRE MODBUS RTU - INVERTOR HIBRID DEYE
 
-## Zona Atribute Fixe (000-019)
+================================================================================
+ZONA ATRIBUTE FIXE (000-019)
+================================================================================
 
-| Adresă | Nume Registru | R/W | Interval | Unitate | Detalii |
-|--------|---------------|-----|----------|---------|---------|
-| 000 | Tip dispozitiv | R | - | - | 0x0200=string, 0x0300=stocare monofazat LV, 0x0400=micro, 0x0500=stocare trifazat LV, 0x0600=stocare trifazat HV |
-| 001 | Adresă Modbus | R | 1-247 | - | - |
-| 002 | Versiune protocol | R | - | - | Ex: 0x0102 = v1.2 |
-| 003-007 | Număr serial | R | ASCII | - | 10 caractere (5 registre x 2 bytes) |
-| 008 | Putere nominală | R | - | - | 2=monofazat, 3=trifazat, 8=stocare monofazat |
-| 013 | Versiune firmware control | R | - | - | - |
-| 015 | Tip standard siguranță | R | - | - | <3=baterie 48V, =3=baterie 24V |
-| 016-017 | Putere nominală | R | - | 0.1W | Octet jos + înalt |
-| 018 | Număr MPPT și faze | R | 1-8/1-3 | - | Ex: 0x0503 = 5 MPPT trifazat |
-| 019 | Nivel tensiune rețea | R/W | 0-3 | - | 0=127/220V, 1=220/380V |
+000  Tip dispozitiv                R      -           -        0x0200=string, 0x0300=stocare monofazat LV, 0x0400=micro, 0x0500=stocare trifazat LV, 0x0600=stocare trifazat HV
+001  Adresă Modbus                 R      1-247       -        
+002  Versiune protocol             R      -           -        Ex: 0x0102 = v1.2
+003  Număr serial byte 01-02       R      ASCII       -        
+004  Număr serial byte 03-04       R      ASCII       -        
+005  Număr serial byte 05-06       R      ASCII       -        
+006  Număr serial byte 07-08       R      ASCII       -        
+007  Număr serial byte 09-10       R      ASCII       -        10 caractere total (5 registre x 2 bytes)
+008  Putere nominală               R      -           -        2=monofazat, 3=trifazat, 8=stocare monofazat
+013  Versiune firmware control     R      -           -        
+015  Tip standard siguranță        R      -           -        <3=baterie 48V, =3=baterie 24V
+016  Putere nominală octet jos     R      -           0.1W     
+017  Putere nominală octet înalt   R      -           0.1W     
+018  Număr MPPT și faze            R      1-8/1-3     -        Ex: 0x0503 = 5 MPPT trifazat
+019  Nivel tensiune rețea          R/W    0-3         -        0=127/220V, 1=220/380V
 
-## Zona Atribute Variabile (020-058)
+================================================================================
+ZONA ATRIBUTE VARIABILE (020-058)
+================================================================================
 
-| Adresă | Nume Registru | R/W | Interval | Unitate | Detalii |
-|--------|---------------|-----|----------|---------|---------|
-| 020 | Enable blocare distanță | R/W | - | - | 0x0002=închis, 0x0000=deschis |
-| 021 | Timp autotest pornire | R/W | 0-1000 | S | - |
-| 022-024 | Timp sistem | R/W | - | - | An/Lună/Zi/Oră/Min/Sec (3 registre) |
-| 027 | Limită sup tensiune rețea | R/W | 1600-5500 | 0.1V | - |
-| 029 | Limită sup frecvență rețea | R/W | 4500-6500 | 0.01Hz | - |
-| 030 | Limită inf frecvență rețea | R/W | 4500-6500 | 0.01Hz | - |
-| 043 | Enable pornire/oprire | R/W | 0-1 | - | 0=oprire, 1=pornire, 2=oprire |
-| 051 | Standard rețea | R/W | 0-20 | - | 1=INMETRO, 2=EN50549, 6=VDE, 9=CEI_0_21, etc |
+020  Enable blocare distanță       R/W    -           -        0x0002=închis, 0x0000=deschis
+021  Timp autotest pornire         R/W    0-1000      S        
+022  Timp sistem byte 01-02        R/W    -           An/Lună  
+023  Timp sistem byte 03-04        R/W    -           Zi/Oră   
+024  Timp sistem byte 05-06        R/W    -           Min/Sec  
+027  Limită sup tensiune rețea     R/W    1600-5500   0.1V     
+029  Limită sup frecvență rețea    R/W    4500-6500   0.01Hz   
+030  Limită inf frecvență rețea    R/W    4500-6500   0.01Hz   
+043  Enable pornire/oprire         R/W    0-1         -        0=oprire, 1=pornire, 2=oprire
+051  Standard rețea                R/W    0-20        -        1=INMETRO, 2=EN50549, 6=VDE, 9=CEI_0_21
 
-## Zona Date Rulare Timp Real (059-124)
+================================================================================
+ZONA DATE RULARE TIMP REAL (059-124)
+================================================================================
 
-| Adresă | Nume Registru | R/W | Interval | Unitate | Detalii |
-|--------|---------------|-----|----------|---------|---------|
-| 059 | Stare rulare | R | 0-5 | - | 0=așteptare, 1=autotest, 2=normal, 3=alarmă, 4=eroare |
-| 060 | Energie activă zilnic | R | -32768 la 32767 | 0.1kWh | Integer cu semn |
-| 063-064 | Total energie activă | R | - | 0.1kWh | Octet jos + înalt |
-| 073 | Tensiune rețea A | R | 0-9999 | 0.1V | - |
-| 076 | Curent rețea A | R | 0-65535 | 0.1A | - |
-| 079 | Frecvență rețea | R | 0-9999 | 0.01Hz | - |
-| 086-087 | Putere activă ieșire | R | - | 0.1W | Octet jos + înalt |
-| 090 | Temperatură radiator | R | 0-3000 | 0.1°C | - |
-| 091 | Temperatură IGBT | R | 0-3000 | 0.1°C | -56.2°C=438, 0°C=1000 |
-| 101-102 | Mesaj alarmă | R | - | - | Cuvinte 1-2 |
-| 103-106 | Mesaj eroare | R | - | - | Cuvinte 1-4 |
-| 109 | Tensiune DC 1 | R | 0-65535 | 0.1V | - |
-| 110 | Curent DC 1 | R | 0-65535 | 0.1A | - |
-| 111 | Tensiune DC 2 | R | 0-65535 | 0.1V | - |
-| 112 | Curent DC 2 | R | 0-65535 | 0.1A | - |
+059  Stare rulare                  R      0-5         -        0=așteptare, 1=autotest, 2=normal, 3=alarmă, 4=eroare
+060  Energie activă zilnic         R      -32768..    0.1kWh   Integer cu semn
+                                           32767
+063  Total energie activă jos      R      -           0.1kWh   
+064  Total energie activă înalt    R      -           0.1kWh   
+073  Tensiune rețea A              R      0-9999      0.1V     
+076  Curent rețea A                R      0-65535     0.1A     
+079  Frecvență rețea               R      0-9999      0.01Hz   
+086  Putere activă ieșire jos      R      -           0.1W     
+087  Putere activă ieșire înalt    R      -           0.1W     
+090  Temperatură radiator          R      0-3000      0.1°C    
+091  Temperatură IGBT              R      0-3000      0.1°C    -56.2°C=438, 0°C=1000
+101  Mesaj alarmă cuvânt 1         R      -           -        
+102  Mesaj alarmă cuvânt 2         R      -           -        
+103  Mesaj eroare cuvânt 1         R      -           -        
+104  Mesaj eroare cuvânt 2         R      -           -        
+105  Mesaj eroare cuvânt 3         R      -           -        
+106  Mesaj eroare cuvânt 4         R      -           -        
+109  Tensiune DC 1                 R      0-65535     0.1V     
+110  Curent DC 1                   R      0-65535     0.1A     
+111  Tensiune DC 2                 R      0-65535     0.1V     
+112  Curent DC 2                   R      0-65535     0.1A     
+113  Tensiune DC 3                 R      0-65535     0.1V     
+114  Curent DC 3                   R      0-65535     0.1A     
+115  Tensiune DC 4                 R      0-65535     0.1V     
+116  Curent DC 4                   R      0-65535     0.1A     
 
-## Zonă Hibrid/Stocare (150-197)
+================================================================================
+ZONĂ HIBRID/STOCARE (150-197)
+================================================================================
 
-| Adresă | Nume Registru | R/W | Interval | Unitate | Detalii |
-|--------|---------------|-----|----------|---------|---------|
-| 150 | Tensiune rețea L1-N | R | - | 0.1V | - |
-| 151 | Tensiune rețea L2-N | R | - | 0.1V | - |
-| 160 | Curent rețea L1 | R | - | 0.01A | Integer cu semn |
-| 161 | Curent rețea L2 | R | - | 0.01A | Integer cu semn |
-| 167 | Putere rețea L1 | R | - | 1W sau 10W | Integer cu semn (vezi reg 054) |
-| 169 | Putere rețea total | R | - | 1W sau 10W | >0=cumpărare, <0=vânzare |
-| 176 | Putere sarcină L1 | R | - | 1W sau 10W | Integer cu semn |
-| 178 | Putere totală sarcină | R | - | 1W sau 10W | Integer cu semn |
-| 182 | Temperatură baterie | R | 0-3000 | 0.1°C | Offset +1000 (1200=20°C) |
-| 183 | Tensiune baterie | R | - | 0.01V | Ex: 4100=41.0V |
-| 184 | Capacitate baterie SOC | R | 0-100 | 1% | - |
-| 186-189 | Putere PV1-4 | R | - | 1W | - |
-| 190 | Putere baterie | R | - | 1W | Integer cu semn |
-| 191 | Curent baterie | R | - | 0.01A | Integer cu semn |
+150  Tensiune rețea L1-N           R      -           0.1V     
+151  Tensiune rețea L2-N           R      -           0.1V     
+152  Tensiune rețea L1-L2          R      -           0.1V     
+154  Tensiune ieșire inv L1-N      R      -           0.1V     
+155  Tensiune ieșire inv L2-N      R      -           0.1V     
+156  Tensiune ieșire inv L1-L2     R      -           0.1V     
+157  Tensiune sarcină L1           R      -           0.1V     
+158  Tensiune sarcină L2           R      -           0.1V     
+160  Curent rețea L1               R      -           0.01A    Integer cu semn
+161  Curent rețea L2               R      -           0.01A    Integer cu semn
+162  Curent Limiter ext L1         R      -           0.01A    Integer cu semn
+163  Curent Limiter ext L2         R      -           0.01A    Integer cu semn
+164  Curent ieșire inv L1          R      -           0.01A    Integer cu semn
+165  Curent ieșire inv L2          R      -           0.01A    Integer cu semn
+167  Putere rețea L1               R      -           1W/10W   Integer cu semn (vezi reg 054)
+168  Putere rețea L2               R      -           1W/10W   Integer cu semn
+169  Putere rețea total            R      -           1W/10W   >0=cumpărare, <0=vânzare
+170  Putere Limiter1 ext           R      -           1W/10W   Integer cu semn
+171  Putere Limiter2 ext           R      -           1W/10W   Integer cu semn
+172  Putere totală ext             R      -           1W/10W   Integer cu semn
+173  Putere ieșire inv L1          R      -           1W       Integer cu semn
+174  Putere ieșire inv L2          R      -           1W       Integer cu semn
+175  Putere totală ieșire inv      R      -           1W       Integer cu semn
+176  Putere sarcină L1             R      -           1W/10W   Integer cu semn
+177  Putere sarcină L2             R      -           1W/10W   Integer cu semn
+178  Putere totală sarcină         R      -           1W/10W   Integer cu semn
+179  Curent sarcină L1             R      -           0.01A    Integer cu semn
+180  Curent sarcină L2             R      -           0.01A    Integer cu semn
+182  Temperatură baterie           R      0-3000      0.1°C    Offset +1000 (1200=20°C)
+183  Tensiune baterie              R      -           0.01V    Ex: 4100=41.0V
+184  Capacitate baterie SOC        R      0-100       1%       
+185  Stare încărcare baterie       R      -           -        
+186  Putere intrare PV1            R      -           1W       
+187  Putere intrare PV2            R      -           1W       
+188  Putere intrare PV3            R      -           1W       
+189  Putere intrare PV4            R      -           1W       
+190  Putere ieșire baterie         R      -           1W       Integer cu semn
+191  Curent ieșire baterie         R      -           0.01A    Integer cu semn
+192  Frecvență sarcină             R      -           0.01Hz   
+193  Frecvență ieșire invertor     R      -           0.01Hz   
+194  Stare releu lateral rețea     R      -           -        0=deconectat, 1=închis
+195  Stare releu lateral gen       R      -           -        Bit0-3: stare releu, Bit4-7: semnal comutator
+196  Frecvență port generator      R      -           0.01Hz   
 
-## Zonă Setări Baterie (200-243)
+================================================================================
+ZONĂ SETĂRI BATERIE (200-243)
+================================================================================
 
-| Adresă | Nume Registru | R/W | Interval | Unitate | Detalii |
-|--------|---------------|-----|----------|---------|---------|
-| 200 | Tip încărcare baterie | R/W | - | - | 0x0000=plumb 4 etape, 0x0001=litiu |
-| 201 | Tensiune echilibrare | R/W | 3800-6100 | 0.01V | Ex: 1480=14.8V |
-| 202 | Tensiune absorbție | R/W | 3800-6100 | 0.01V | Ex: 1440=14.4V |
-| 203 | Tensiune flotare | R/W | 3800-6100 | 0.01V | - |
-| 204 | Capacitate baterie | R/W | 0-2000 | 1Ah | Ex: 200=200AH |
-| 210 | Curent max încărcare | R/W | 0-185 | 1A | - |
-| 211 | Curent max descărcare | R/W | 0-185 | 1A | - |
-| 220 | Tensiune oprire baterie | R/W | 3800-6100 | 0.01V | Protecție jos |
-| 221 | Tensiune repornire | R/W | 3800-6100 | 0.01V | Recuperare |
-| 222 | Tensiune nivel jos | R/W | 3800-6100 | 0.01V | Adâncime descărcare |
-| 231 | Enable încărcare generator | R/W | - | - | - |
-| 232 | Enable încărcare rețea | R/W | - | - | - |
-| 243 | Model management energie | R/W | - | - | 0=prioritate baterie, 1=prioritate sarcină |
+200  Tip încărcare baterie         R/W    -           -        0x0000=plumb 4 etape, 0x0001=litiu
+201  Tensiune echilibrare          R/W    3800-6100   0.01V    Ex: 1480=14.8V
+202  Tensiune absorbție            R/W    3800-6100   0.01V    Ex: 1440=14.4V
+203  Tensiune flotare              R/W    3800-6100   0.01V    
+204  Capacitate baterie            R/W    0-2000      1Ah      Ex: 200=200AH
+205  Tensiune goală                R/W    -           0.01V    
+210  Curent max încărcare          R/W    0-185       1A       
+211  Curent max descărcare         R/W    0-185       1A       
+213  Funcționare după              R/W    -           -        0=după tensiune, 1=după capacitate, 2=fără baterie
+217  Capacitate oprire             R/W    0-100       1%       Punct limită capacitate joasă
+218  Capacitate repornire          R/W    0-100       1%       Punct recuperare protecție
+219  Capacitate nivel jos          R/W    0-100       1%       
+220  Tensiune oprire               R/W    3800-6100   0.01V    Protecție jos
+221  Tensiune repornire            R/W    3800-6100   0.01V    Recuperare
+222  Tensiune nivel jos            R/W    3800-6100   0.01V    Adâncime descărcare
+225  Punct tensiune pornire        R/W    0-6300      0.01V    Generator pornește încărcare când tensiune < valoare
+     încărcare generator
+226  Punct capacitate pornire      R/W    0-6300      1%       Generator pornește încărcare când capacitate < valoare
+     încărcare generator
+227  Curent încărcare de la gen    R/W    0-185       1A       
+228  Punct tensiune pornire        R/W    0-6300      0.01V    
+     încărcare rețea
+229  Punct capacitate pornire      R/W    0-6300      1%       
+     încărcare rețea
+230  Curent încărcare de la        R/W    0-185       1A       
+     rețea
+231  Enable încărcare generator    R/W    -           -        
+232  Enable încărcare rețea        R/W    -           -        
+233  Intrare solar ca PSU          R/W    0-1         -        0=solar, 1=PSU
+234  Funcție forțare pornire       R/W    -           -        Premisă: reg 235=1. 0=nu forța, 1=forțează
+     generator ca sarcină
+235  Enable intrare generator      R/W    -           -        0=doar intrare gen, 1=ieșire sarcină inteligentă, 2=intrare invertor
+     ca ieșire sarcină
+243  Model management energie      R/W    -           -        0=prioritate baterie, 1=prioritate sarcină
+244  Funcție control limit         R/W    -           0/1      0x00=vânzare, 0x01=încorporat, 0x02=extern
+245  Limită putere max             R/W    0-8000      1W       Putere totală
+     ieșire rețea
+247  Vânzare solar                 R/W    -           -        0x00=solar nu vinde, 0x01=solar vinde
 
-## Zonă Time of Use (248-279)
+================================================================================
+ZONĂ TIME OF USE (248-279)
+================================================================================
 
-| Adresă | Nume Registru | R/W | Interval | Unitate | Detalii |
-|--------|---------------|-----|----------|---------|---------|
-| 248 | Enable TOU Selling | R/W | - | - | Bit0: 0=dezactivat, 1=activat; Bit1-7: Luni-Duminică |
-| 250-255 | Timp 1-6 mod vânzare | R/W | 0-2359 | - | Ex: 2359=23:59 |
-| 256-261 | Putere 1-6 mod vânzare | R/W | 0-8000 | 1W | - |
-| 262-267 | Tensiune 1-6 mod vânzare | R/W | 0-6300 | 0.01V | - |
-| 268-273 | Capacitate 1-6 | R/W | 0-100 | 1% | SOC |
-| 274-279 | Enable încărcare 1-6 | R/W | 0-1 | - | Bit0: rețea, Bit1: generator |
+248  Enable funcție TOU Selling    R/W    -           -        Bit0: 0=dezactivat, 1=activat
+                                                                Bit1-7: Luni-Duminică (0=dezactivat, 1=activat)
+250  Punct timp 1 mod vânzare      R/W    0-2359      -        2359=23:59
+251  Punct timp 2 mod vânzare      R/W    0-2359      -        
+252  Punct timp 3 mod vânzare      R/W    0-2359      -        
+253  Punct timp 4 mod vânzare      R/W    0-2359      -        
+254  Punct timp 5 mod vânzare      R/W    0-2359      -        
+255  Punct timp 6 mod vânzare      R/W    0-2359      -        
+256  Putere punct timp 1           R/W    0-8000      1W       Afectat de puterea maximă descărcare baterie
+257  Putere punct timp 2           R/W    0-8000      1W       
+258  Putere punct timp 3           R/W    0-8000      1W       
+259  Putere punct timp 4           R/W    0-8000      1W       
+260  Putere punct timp 5           R/W    0-8000      1W       
+261  Putere punct timp 6           R/W    0-8000      1W       
+262  Tensiune punct timp 1         R/W    0-6300      0.01V    Afectat de tensiunea bateriei
+263  Tensiune punct timp 2         R/W    0-6300      0.01V    
+264  Tensiune punct timp 3         R/W    0-6300      0.01V    
+265  Tensiune punct timp 4         R/W    0-6300      0.01V    
+266  Tensiune punct timp 5         R/W    0-6300      0.01V    
+267  Tensiune punct timp 6         R/W    0-6300      0.01V    
+268  Capacitate 1                  R/W    0-100       1%       SOC
+269  Capacitate 2                  R/W    0-100       1%       
+270  Capacitate 3                  R/W    0-100       1%       
+271  Capacitate 4                  R/W    0-100       1%       
+272  Capacitate 5                  R/W    0-100       1%       
+273  Capacitate 6                  R/W    0-100       1%       
+274  Enable încărcare punct 1      R/W    0-1         -        Bit0: rețea, Bit1: gen, Bit2: GM, Bit3: BU, Bit4: CH
+275  Enable încărcare punct 2      R/W    0-1         -        
+276  Enable încărcare punct 3      R/W    0-1         -        
+277  Enable încărcare punct 4      R/W    0-1         -        
+278  Enable încărcare punct 5      R/W    0-1         -        
+279  Enable încărcare punct 6      R/W    0-1         -        
 
-## Zonă Setări Rețea (280-293)
+================================================================================
+ZONĂ SETĂRI REȚEA (280-293)
+================================================================================
 
-| Adresă | Nume Registru | R/W | Interval | Unitate | Detalii |
-|--------|---------------|-----|----------|---------|---------|
-| 284 | Mod rețea | R/W | 0-1 | - | 0=standard general, 1=UL1741, 2=CPUC_RULE21, etc |
-| 285 | Frecvență rețea | R/W | 0-1 | - | 0=50Hz, 1=60Hz |
-| 286 | Tip rețea | R/W | 0-3 | - | 0=monofazat, 1=bifazat 120/240V, 2=trifazat 208V |
-| 287 | Protecție tensiune înaltă | R/W | 1800-2700 | 0.1V | - |
-| 288 | Protecție tensiune joasă | R/W | 1800-2700 | 0.1V | - |
-| 289 | Protecție frecvență înaltă | R/W | 4500-6500 | 0.01Hz | - |
-| 290 | Protecție frecvență joasă | R/W | 4500-6500 | 0.01Hz | - |
-| 292 | Putere GEN peak shaving | R/W | 0-16000 | 1W | - |
-| 293 | Putere GRID peak shaving | R/W | 0-16000 | 1W | - |
+280  Microinvertor export cutoff   R/W    0-1         -        Bit0-3: tensiune ieșire
+                                                                Bit4-7: Gen peak-shaving
+                                                                Bit8-11: Grid peak-shaving
+                                                                Bit12: On Grid always on
+281  Enable detecție auto          R/W    0-1         -        
+     direcție senzor extern
+282  Timp restabilire conectare    R/W    10-300      -        
+     rețea
+283  Enable mod Solar Arc Fault    R/W    0-1         -        0x00=închis, 0x01=deschis, 0x02=resetare eroare
+284  Mod rețea                     R/W    0-1         -        0=standard general, 1=UL1741, 2=CPUC_RULE21, 3=SRD-UL1741, 4=CEI 0-21
+285  Setare frecvență rețea        R/W    0-1         -        0x00=50Hz, 0x01=60Hz
+286  Setare tip rețea              R/W    0-3         -        0x00=monofazat, 0x01=bifazat 120/240V, 0x02=trifazat 208V 120°, 0x03=120V monofazat
+287  Protecție tensiune înaltă     R/W    1800-2700   0.1V     
+288  Protecție tensiune joasă      R/W    1800-2700   0.1V     
+289  Protecție frecvență înaltă    R/W    4500-6500   0.01Hz   
+290  Protecție frecvență joasă     R/W    4500-6500   0.01Hz   
+291  Generator conectat la         R/W    0-1         -        0=dezactivat, 1=activat
+     intrare rețea
+292  Putere GEN peak shaving       R/W    0-16000     1W       
+293  Putere GRID peak shaving      R/W    0-16000     1W       
 
-## Zonă Baterie Litiu (312-325)
+================================================================================
+ZONĂ BATERIE LITIU (312-325)
+================================================================================
 
-| Adresă | Nume Registru | R/W | Interval | Unitate | Detalii |
-|--------|---------------|-----|----------|---------|---------|
-| 312 | Tensiune încărcare BMS | R/W | - | 0.01V | - |
-| 313 | Tensiune descărcare BMS | R/W | - | 0.01V | - |
-| 314 | Limită curent încărcare BMS | R/W | - | 1A | - |
-| 315 | Limită curent descărcare BMS | R/W | - | 1A | - |
-| 316 | Capacitate timp real BMS | R/W | - | 1% | - |
-| 317 | Tensiune timp real BMS | R/W | - | 0.01V | - |
-| 318 | Curent timp real BMS | R/W | - | 1A | - |
-| 319 | Temperatură timp real BMS | R/W | - | 0.1°C | Offset +1000 |
-| 322 | Alarmă baterie litiu | R/W | - | - | - |
-| 323 | Eroare baterie litiu | R/W | 0-65535 | - | - |
-| 325 | Tip baterie litiu | R/W | - | - | 0=PYLON/SOLAX, 1=Tianbangda RS485, 5=Pylon 485, etc |
+312  Tensiune încărcare BMS        R/W    -           0.01V    
+313  Tensiune descărcare BMS       R/W    -           0.01V    
+314  Limită curent încărcare BMS   R/W    -           1A       
+315  Limită curent descărcare BMS  R/W    -           1A       
+316  Capacitate timp real BMS      R/W    -           1%       
+317  Tensiune timp real BMS        R/W    -           0.01V    
+318  Curent timp real BMS          R/W    -           1A       
+319  Temperatură timp real BMS     R/W    -           0.1°C    Offset +1000 (1000=0°, 1200=20.0°, 800=-20.0°C)
+320  Limită curent încărcare max   R/W    -           1A       
+321  Limită curent descărcare max  R/W    -           -        
+322  Bit alarmă baterie litiu      R/W    -           -        
+323  Bit eroare baterie litiu      R/W    0-65535     -        
+324  Simbol 2 baterie litiu        R/W    0-65535     -        Bit0: vacant, Bit1: flag încărcare forțată
+325  Tip baterie litiu             R/W    -           -        0x0000=PYLON/SOLAX/CAN general
+                                                                0x0001=Tianbangda RS485
+                                                                0x0005=Pylon 485
+                                                                0x0006=Jelis 485
 
-## Zonă Calibrare (376-389)
+================================================================================
+ZONĂ CALIBRARE (376-389)
+================================================================================
 
-| Adresă | Nume Registru | R/W | Unitate | Detalii |
-|--------|---------------|-----|---------|---------|
-| 376 | Grid1_I calibrare | R/W | - | - |
-| 377 | Grid2_I calibrare | R/W | - | - |
-| 378 | Grid_V_L1 calibrare | R/W | - | - |
-| 379 | Grid_V_L2 calibrare | R/W | - | - |
-| 382 | PV1_V calibrare | R/W | - | - |
-| 383 | PV1_I calibrare | R/W | - | - |
-| 384 | PV2_V calibrare | R/W | - | - |
-| 385 | PV2_I calibrare | R/W | - | - |
-| 388 | BAT_I calibrare | R/W | - | - |
-| 389 | BAT_V calibrare | R/W | - | - |
+376  Grid1_I calibrare             R/W    -           -        
+377  Grid2_I calibrare             R/W    -           -        
+378  Grid_V_L1 calibrare           R/W    -           -        
+379  Grid_V_L2 calibrare           R/W    -           -        
+380  Limit1_I calibrare            R/W    -           -        
+381  Limit2_I calibrare            R/W    -           -        
+382  PV1_V calibrare               R/W    -           -        
+383  PV1_I calibrare               R/W    -           -        
+384  PV2_V calibrare               R/W    -           -        
+385  PV2_I calibrare               R/W    -           -        
+386  INV_I calibrare               R/W    -           -        
+387  INV_V calibrare               R/W    -           -        
+388  BAT_I calibrare               R/W    -           -        
+389  BAT_V calibrare               R/W    -           -        
 
-## Zonă Reconectare (433-436)
+================================================================================
+ZONĂ RECONECTARE (433-436)
+================================================================================
 
-| Adresă | Nume Registru | R/W | Interval | Unitate | Detalii |
-|--------|---------------|-----|----------|---------|---------|
-| 433 | Reconectare tensiune înaltă | R/W | 1800-2700 | 0.1V | Grid V High Reconnect |
-| 434 | Reconectare tensiune joasă | R/W | 1800-2700 | 0.1V | Grid V Low Reconnect |
-| 435 | Reconectare frecvență înaltă | R/W | 4500-6500 | 0.01Hz | Grid Hz High Reconnect |
-| 436 | Reconectare frecvență joasă | R/W | 4500-6500 | 0.01Hz | Grid Hz Low Reconnect |
+433  Reconectare tensiune înaltă   R/W    1800-2700   0.1V     Grid V High Reconnect
+434  Reconectare tensiune joasă    R/W    1800-2700   0.1V     Grid V Low Reconnect
+435  Reconectare frecvență înaltă  R/W    4500-6500   0.01Hz   Grid Hz High Reconnect
+436  Reconectare frecvență joasă   R/W    4500-6500   0.01Hz   Grid Hz Low Reconnect
 
-## Protocol Baterie Deye (10000-10031)
+================================================================================
+PROTOCOL BATERIE DEYE (10000-10031)
+================================================================================
 
-| Adresă | Nume Registru | R/W | Unitate | Detalii |
-|--------|---------------|-----|---------|---------|
-| 10000 | Tip dispozitiv baterie | R | - | 0x700: Protocol Pack litiu |
-| 10003 | Tensiune baterie | R | 0.1V | - |
-| 10004 | Curent baterie | R | 0.1A | - |
-| 10005 | SOC baterie | R | 1% | - |
-| 10006 | SOH baterie | R | 1% | - |
-| 10007 | Capacitate rămasă | R | 1Ah | - |
-| 10008 | Temperatură baterie | R | 0.1°C | - |
-| 10009 | Tensiune încărcare | R | 0.1V | - |
-| 10010 | Tensiune descărcare | R | 0.1V | - |
-| 10013 | Limită curent încărcare | R | 1A | - |
-| 10014 | Limită curent descărcare | R | 1A | - |
-| 10019 | Eroare baterie 1 | R | - | - |
-| 10020 | Eroare baterie 2 | R | - | - |
-| 10021 | Alarmă baterie 1 | R | - | - |
-| 10022 | Alarmă baterie 2 | R | - | - |
+10000  Tip dispozitiv baterie       R      -           -        0x700: Protocol Pack litiu
+10001  Versiune protocol            R      -           -        
+10002  Număr Pack-uri baterie       R      -           1        
+10003  Tensiune baterie             R      -           0.1V     
+10004  Curent baterie               R      -           0.1A     
+10005  SOC baterie                  R      -           1%       
+10006  SOH baterie                  R      -           1%       
+10007  Capacitate rămasă            R      -           1Ah      
+10008  Temperatură baterie          R      -           0.1°C    
+10009  Tensiune încărcare           R      -           0.1V     
+10010  Tensiune descărcare          R      -           0.1V     
+10011  Tensiune oprire încărcare    R      -           1V       
+10012  Tensiune oprire descărcare   R      -           1V       
+10013  Limită curent încărcare      R      -           1A       
+10014  Limită curent descărcare     R      -           1A       
+10015  Limită curent încărcare      R      -           1A       
+       off-grid
+10016  Limită curent descărcare     R      -           1A       
+       off-grid
+10017  Flag încărcare forțată       R      -           -        
+10018  Flag calibrare SOC           R      -           -        
+10019  Eroare baterie 1             R      -           -        
+10020  Eroare baterie 2             R      -           -        
+10021  Alarmă baterie 1             R      -           -        
+10022  Alarmă baterie 2             R      -           -        
+10023  Rezervat 1                   R      -           -        
+10024  Rezervat 2                   R      -           -        
+10025  Rezervat 3                   R      -           -        
+10026  Rezervat 4                   R      -           -        
+10027  Rezervat 5                   R      -           -        
+10028  Rezervat 6                   R      -           -        
+10029  Rezervat 7                   R      -           -        
+10030  Rezervat 8                   R      -           -        
+10031  Rezervat 9                   R      -           -        
 
-## Pack-uri Baterie (10032+)
+================================================================================
+PACK-URI BATERIE (10032+)
+================================================================================
 
-Fiecare Pack: 38 registre (8 SN + 30 date)
+Fiecare Pack: 38 registre total (8 registre SN + 30 registre date)
 
-**Pack 1:** 10032-10069  
-**Pack 2:** 10070-10107  
-**Pack 3:** 10108-10145  
+Pack 1: 10032-10069
+Pack 2: 10070-10107
+Pack 3: 10108-10145
 ...și așa mai departe
 
-### Date per Pack (exemplu Pack 1: 10040-10069)
+--------------------------------------------------------------------------------
+Număr Serial Pack (8 registre, 16 bytes ASCII)
+--------------------------------------------------------------------------------
 
-| Offset | Nume | Unitate |
-|--------|------|---------|
-| +0 | Tensiune modul | 0.1V |
-| +1 | Curent modul | 0.1A |
-| +2 | Temperatură medie | offset +1000°C |
-| +7 | SOC | 0.1% |
-| +9 | Capacitate rămasă | 0.1Ah |
-| +11 | Tensiune încărcare | 0.01V |
-| +13 | Curent încărcare | 0.1A |
-| +15 | Tensiune celulă max | 0.01V |
-| +16 | Tensiune celulă min | 0.01V |
-| +17 | Număr cicluri | 1 |
-| +19 | Avertizare 1 | - |
-| +21 | Eroare 1 | - |
+Exemplu Pack 1:
+10032  Pack 1 byte 01-02            R      ASCII       -        
+10033  Pack 1 byte 03-04            R      ASCII       -        
+10034  Pack 1 byte 05-06            R      ASCII       -        
+10035  Pack 1 byte 07-08            R      ASCII       -        
+10036  Pack 1 byte 09-10            R      ASCII       -        
+10037  Pack 1 byte 11-12            R      ASCII       -        
+10038  Pack 1 byte 13-14            R      ASCII       -        
+10039  Pack 1 byte 15-16            R      ASCII       -        
 
-## Protocol Modbus
+--------------------------------------------------------------------------------
+Date Detaliate Pack 1 (30 registre)
+--------------------------------------------------------------------------------
 
-**Cod funcție 0x03:** Citire registru  
-**Cod funcție 0x10:** Scriere registru
+10040  Tensiune modul               R      -           0.1V     
+10041  Curent modul                 R      -           0.1A     
+10042  Temperatură medie            R      -           -        1250=25.0°C
+10043  Temperatură celulă max       R      -           -        1250=25.0°C
+10044  Temperatură celulă min       R      -           -        1250=25.0°C
+10045  Temperatură MOS max          R      -           -        1250=25.0°C
+10046  Temp membrană încălzire      R      -           -        1250=25.0°C
+10047  SOC                          R      -           0.1      
+10048  SOH                          R      -           0.1      
+10049  Capacitate rămasă            R      -           0.1Ah    
+10050  Capacitate totală            R      -           0.1Ah    
+10051  Tensiune încărcare           R      -           0.01V    
+10052  Tensiune descărcare          R      -           0.01V    
+10053  Curent încărcare             R      -           0.1A     
+10054  Curent descărcare            R      -           0.1A     
+10055  Tensiune celulă max          R      -           0.01V    
+10056  Tensiune celulă min          R      -           0.01V    
+10057  Număr cicluri                R      -           1        
+10058  Stare MOS                    R      -           1        
+10059  Avertizare 1                 R      -           -        
+10060  Avertizare 2                 R      -           -        
+10061  Eroare 1                     R      -           -        
+10062  Eroare 2                     R      -           -        
+10063  Versiune software            R      -           -        
+10064  Versiune hardware            R      -           -        
+10065  Rezervat 1                   R      -           -        
+10066  Rezervat 2                   R      -           -        
+10067  Rezervat 3                   R      -           -        
+10068  Rezervat 4                   R      -           -        
+10069  Rezervat 5                   R      -           -        
 
-**Parametri:**
-- Rată: 9600 bps
-- Format: 8N1
-- Interfață: RS485/RS232
+================================================================================
+PROTOCOL MODBUS RTU
+================================================================================
+
+Cod funcție 0x03: Citire registru (singular sau multiple)
+Cod funcție 0x10: Scriere registru (singular sau multiple)
+
+Parametri comunicație:
+- Rată transmisie: 9600 bps
+- Format date: 8N1 (8 biți date, fără paritate, 1 bit stop)
+- Interfață fizică: RS485 sau RS232
+
+--------------------------------------------------------------------------------
+Cerere Citire (0x03)
+--------------------------------------------------------------------------------
+
+Structură PDU cerere:
+Cod funcție              1 byte     0x03
+Adresă start             2 bytes    0x0000-0xFFFF
+Număr registre           2 bytes    0x0001-0x007D
+
+Structură PDU răspuns normal:
+Cod funcție              1 byte     0x03
+Număr bytes              1 byte     N×2
+Valori registre          N×2 bytes  
+
+Structură PDU răspuns excepție:
+Cod eroare               1 byte     0x83
+Cod excepție             1 byte     
+
+Exemplu citire 3 registre de la adresa 107:
+Cerere:  03 00 6B 00 03
+Răspuns: 03 06 02 2B 00 00 00 64
+
+--------------------------------------------------------------------------------
+Cerere Scriere (0x10)
+--------------------------------------------------------------------------------
+
+Structură PDU cerere:
+Cod funcție              1 byte     0x10
+Adresă start             2 bytes    0x0000-0xFFFF
+Număr registre           2 bytes    0x0001-0x007B
+Număr bytes              1 byte     N×2
+Valori registre          N×2 bytes  
+
+Structură PDU răspuns normal:
+Cod funcție              1 byte     0x10
+Adresă start             2 bytes    0x0000-0xFFFF
+Număr registre           2 bytes    0x0001-0x007B
+
+Structură PDU răspuns excepție:
+Cod eroare               1 byte     0x90
+Cod excepție             1 byte     
+
+Exemplu scriere 2 registre la adresa 1 cu valorile 0x000A și 0x0102:
+Cerere:  10 00 01 00 02 04 00 0A 01 02
+Răspuns: 10 00 01 00 02
+
+================================================================================
+SFARSIT DOCUMENT
+================================================================================
